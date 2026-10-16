@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #0a0e17;
+  --bg-panel: #111827;
+  --bg-panel-2: #161f33;
+  --bg-elevated: #1c2740;
+  --ink: #dbeeff;
+  --ink-soft: #9fb8d9;
+  --ink-mute: #64789c;
+  --accent: #ff2fb0;
+  --accent-2: #2fe4ff;
+  --accent-3: #ffd23f;
+  --line: #2fe4ff;
+  --line-soft: #24344f;
+  --grid: rgba(47, 228, 255, 0.10);
+  --good: #3fffa8;
+  --bad: #ff3f6b;
+  --warn: #ffd23f;
+  --shadow: 0 0 0 1px rgba(47,228,255,0.25), 0 0 16px rgba(255,47,176,0.25);
+  --radius: 2px;
+  --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: 'Orbitron', 'JetBrains Mono', sans-serif;
+  --sans: 'JetBrains Mono', ui-monospace, monospace;
+  --logH: 180px;
+  --mobileLogH: 180px;
+}
+
+/* ============================================================
+   THEME: NEON ARENA — dark cyberpunk, glowing edges, angular
+   clipped corners, magenta/cyan circuitry.
+   ============================================================ */
+
+html, body { letter-spacing: 0.2px; }
+
+header.topbar, .panel, .log-panel, .node, .pokemon-card {
+  border-width: 1px;
+}
+header.topbar::before {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  opacity: 0.9;
+  height: 2px;
+  box-shadow: 0 0 8px var(--accent-2);
+}
+
+.brand {
+  font-family: var(--serif);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px var(--accent-2), 0 0 18px rgba(47,228,255,0.4);
+}
+.brand::before, .brand::after { text-shadow: 0 0 8px currentColor; }
+
+.panel-header {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  border-bottom-color: var(--accent-2);
+}
+.panel-header .tag {
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 8px rgba(255,47,176,0.6);
+}
+
+.download-btn, .theme-select, .team-controls button, .url-export-btn,
+.node-panel-controls button, .nash-btn, .battle-flip-btn,
+.import-bar button, .log-reset-btn, #importSide, #autoToggle {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.download-btn { box-shadow: 0 0 10px rgba(255,47,176,0.5); }
+.download-btn:hover { box-shadow: 0 0 16px rgba(255,47,176,0.8); background: var(--accent); border-color: var(--accent); }
+.team-controls button:hover, .import-bar button:hover, .nash-btn:hover, .battle-flip-btn:hover, .theme-select:hover {
+  box-shadow: 0 0 10px rgba(47,228,255,0.5);
+  color: var(--accent-2);
+}
+
+.node {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 1px var(--line-soft), var(--shadow);
+}
+.node:hover { box-shadow: 0 0 0 1px var(--accent-2), 0 0 12px rgba(47,228,255,0.5); }
+.node.active {
+  box-shadow: 0 0 0 1px var(--accent), 0 0 16px rgba(255,47,176,0.6);
+}
+.node.active::before { content: "▶"; text-shadow: 0 0 6px var(--accent); }
+.node .node-turn { text-shadow: 0 0 6px var(--accent-2); }
+
+.node-canvas-wrap {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.gen-chip { border-color: var(--accent-2); color: var(--accent-2); box-shadow: 0 0 6px rgba(47,228,255,0.3); }
+.gen-chip.champions { border-color: var(--accent-3); color: var(--accent-3); }
+
+::-webkit-scrollbar-thumb { background: var(--accent-2); box-shadow: 0 0 6px var(--accent-2); }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+
+.field input, .import-bar input[type=text] { border-color: var(--line-soft); }
+.field input:focus, .import-bar input[type=text]:focus {
+  box-shadow: 0 0 6px rgba(47,228,255,0.5);
+}
+
+/* Mobile: the wide tracking on the wordmark does not fit a phone header. */
+@media (max-width: 900px) {
+  .brand { letter-spacing: 0.5px; }
+}
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }

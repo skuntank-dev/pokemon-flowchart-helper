@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #f2f2ed;
+  --bg-panel: #ffffff;
+  --bg-panel-2: #eaeae2;
+  --bg-elevated: #ffffff;
+  --ink: #0a0a0a;
+  --ink-soft: #2a2a2a;
+  --ink-mute: #6a6a6a;
+  --accent: #ff3b1f;
+  --accent-2: #0033ff;
+  --accent-3: #e0c400;
+  --line: #0a0a0a;
+  --line-soft: #0a0a0a;
+  --grid: rgba(0,0,0,0.06);
+  --good: #0a7d32;
+  --bad: #d10000;
+  --warn: #a06d00;
+  --shadow: 4px 4px 0 #0a0a0a;
+  --radius: 0px;
+  --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: 'Archivo Black', 'Arial Black', sans-serif;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --logH: 180px;
+  --mobileLogH: 180px;
+}
+
+/* ============================================================
+   THEME: BRUTALIST — raw paper/concrete, hard black edges,
+   offset block shadows, no curves, loud primary accents.
+   ============================================================ */
+
+* { text-shadow: none !important; }
+
+header.topbar, .panel, .log-panel, .pokemon-card, .node,
+.download-btn, .theme-select, .team-controls button, .url-export-btn,
+.node-panel-controls button, .nash-btn, .battle-flip-btn,
+.import-bar button, .import-bar input[type=text], .field input,
+.turn0-pokemon-btn, .battle-turn-info, .gen-chip, #importSide, #autoToggle,
+.log-reset-btn, .panel-header .tag {
+  border-width: 3px !important;
+  border-radius: 0 !important;
+}
+header.topbar::before { display: none; }
+
+.brand {
+  font-family: var(--serif);
+  font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.brand::before, .brand::after { content: ""; }
+
+.download-btn:active, .team-controls button:active, .import-bar button:active,
+.nash-btn:active, .battle-flip-btn:active, .theme-select:active {
+  transform: translate(4px, 4px);
+  box-shadow: none !important;
+}
+.download-btn, .team-controls button, .url-export-btn, .nash-btn,
+.battle-flip-btn, .import-bar button, .log-reset-btn, #importSide, #autoToggle,
+.theme-select {
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+
+.panel-header {
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.panel-header .tag {
+  background: var(--accent);
+  color: #fff;
+}
+
+.node.active::before { content: "▶"; }
+
+::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 0; }
+::-webkit-scrollbar-track { background: var(--bg-panel-2); }
+
+/* Mobile. A theme sheet loads after the base <style>, so its plain rules beat
+   the base's media queries — every size bumped above has to be walked back
+   here explicitly or the header overflows on a phone. */
+@media (max-width: 900px) {
+  .brand { font-size: 15px; letter-spacing: 0.5px; }
+}
+@media (max-width: 480px) {
+  .brand { font-size: 13px; }
+}
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }

@@ -1,0 +1,10 @@
+/* ============================================================
+   THEME: DEFAULT
+   The base stylesheet in index.html already *is* this look, so
+   this file deliberately adds nothing. It exists so that
+   "Default" appears in the theme dropdown alongside the others
+   (the dropdown is built by listing this folder).
+   ============================================================ */
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }

@@ -1,0 +1,5303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+<meta name="theme-color" content="#2f5d8c" />
+<title>Pokemon Flowchart Tool</title>
+<style>
+  /* ============ ASSET PATH ============ */
+  /* Sprites folder: assets/sprites/home/ */
+
+  :root {
+    --bg: #d9e3ec;
+    --bg-panel: #e8eef4;
+    --bg-panel-2: #dde6ee;
+    --bg-elevated: #f3f6fa;
+    --ink: #1f2a3a;
+    --ink-soft: #3d4a5f;
+    --ink-mute: #6a7689;
+    --accent: #2f5d8c;
+    --accent-2: #5a8aab;
+    --accent-3: #c08a4a;
+    --line: #a8b6c6;
+    --line-soft: #c4cfdb;
+    --grid: rgba(120, 140, 170, 0.25);
+    --good: #4a7d5d;
+    --bad: #a04855;
+    --warn: #b08540;
+    --shadow: 0 1px 0 rgba(30,45,70,0.04), 0 2px 6px rgba(30,45,70,0.10);
+    --radius: 4px;
+    --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+    --serif: 'Fraunces', 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+    --logH: 180px;
+    --mobileLogH: 180px;
+  }
+  [data-theme="dark"] {
+    --bg: #1f2128;
+    --bg-panel: #272a33;
+    --bg-panel-2: #2d3039;
+    --bg-elevated: #343844;
+    --ink: #e6e3d6;
+    --ink-soft: #bcb9ac;
+    --ink-mute: #8a8778;
+    --accent: #e07a6a;
+    --accent-2: #7ca5b5;
+    --accent-3: #d4a373;
+    --line: #444853;
+    --line-soft: #3a3d47;
+    --grid: rgba(255,255,255,0.05);
+    --good: #88b888;
+    --bad: #d47878;
+    --warn: #d4a85d;
+    --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    overflow: hidden;
+  }
+
+  body {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* ============ LAYOUT ============ */
+  .app {
+    display: grid;
+    grid-template-rows: 56px 1fr 6px var(--logH);
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    column-gap: 6px;
+    row-gap: 0;
+    padding: 6px;
+  }
+  .app > header.topbar { margin-bottom: 6px; }
+
+  /* Horizontal splitter for log row */
+  .splitter-h {
+    background: var(--line-soft);
+    cursor: row-resize;
+    position: relative;
+    transition: background 0.15s;
+    z-index: 2;
+    margin: 3px 0;
+    border-radius: 2px;
+  }
+  .splitter-h::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+    background: var(--ink-mute);
+    border-radius: 1px;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+  .splitter-h:hover, .splitter-h.dragging {
+    background: var(--accent);
+  }
+  .splitter-h:hover::before, .splitter-h.dragging::before {
+    opacity: 1;
+    background: white;
+  }
+  body.resizing-rows, body.resizing-rows * {
+    cursor: row-resize !important;
+    user-select: none !important;
+  }
+
+  /* ============ HEADER ============ */
+  header.topbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  header.topbar::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent 30%, transparent 70%, var(--accent-2));
+    opacity: 0.6;
+  }
+  .brand {
+    text-align: center;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+  }
+  .brand::before {
+    content: "◆ ";
+    color: var(--accent);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .brand::after {
+    content: " ◆";
+    color: var(--accent-2);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .credits {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+  .credits a {
+    color: var(--accent-2);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-2);
+  }
+  .credits a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .left-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .download-btn {
+    background: var(--accent);
+    color: white;
+    border: 1px solid var(--accent);
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .download-btn:hover { background: var(--ink); border-color: var(--ink); }
+  .theme-toggle {
+    background: var(--bg-elevated);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* ============ MIDDLE ROW ============ */
+  .middle {
+    display: grid;
+    grid-template-columns: var(--col1, 360px) 6px var(--col3-split-left, 1fr) 6px var(--col3, 380px);
+    gap: 0;
+    min-height: 0;
+    column-gap: 0;
+  }
+  .middle > .panel { margin: 0 3px; }
+  .splitter {
+    background: var(--line-soft);
+    cursor: col-resize;
+    position: relative;
+    transition: background 0.15s;
+    z-index: 2;
+  }
+  .splitter::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+    background: var(--ink-mute);
+    border-radius: 1px;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+  .splitter:hover, .splitter.dragging {
+    background: var(--accent);
+  }
+  .splitter:hover::before, .splitter.dragging::before {
+    opacity: 1;
+    background: white;
+  }
+  body.resizing-cols, body.resizing-cols * {
+    cursor: col-resize !important;
+    user-select: none !important;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-panel-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink-soft);
+  }
+  .panel-header .tag {
+    font-size: 10px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .panel-body {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+  }
+
+  /* ============ COLUMN 1: TEAM ============ */
+  .team-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .team-controls-url-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .url-export-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .url-export-btn::before { content: "🔗"; font-size: 11px; }
+  .url-export-btn:hover {
+    border-color: var(--accent-2);
+    color: var(--accent-2);
+  }
+  .team-controls button {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 8px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .team-controls button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .team-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 6px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .team-section-label::before, .team-section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line-soft);
+  }
+
+  .pokemon-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .pokemon-card-header {
+    padding: 6px 10px;
+    background: var(--bg-panel-2);
+    border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .pokemon-card-header .slot {
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .pokemon-card.opp .pokemon-card-header .slot {
+    color: var(--accent-2);
+  }
+  .pokemon-card-header .name {
+    flex: 1;
+    margin-left: 10px;
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-weight: 500;
+  }
+  .pokemon-card-header .chev { color: var(--ink-mute); }
+  .pokemon-card-body {
+    display: none;
+    padding: 8px 10px;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pokemon-card.open .pokemon-card-body { display: flex; }
+  .pokemon-card.open .chev { transform: rotate(90deg); }
+
+  .field {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    align-items: center;
+    gap: 6px;
+  }
+  .field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field input {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 5px 8px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 13px;
+    width: 100%;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ============ COLUMN 2: BATTLE ============ */
+  .battle-panel {
+    position: relative;
+  }
+  .battle-body {
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .battle-disabled-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 20px;
+  }
+  .battle-turn-info {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--bg-elevated);
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    z-index: 5;
+  }
+  .battle-flip-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--bg-elevated);
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .battle-flip-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .battle-flip-btn::before { content: "⇅"; font-size: 14px; line-height: 1; }
+
+  /* Turn 0 select screen */
+  .turn0-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 50px 20px 20px 20px;
+  }
+  .turn0-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    flex: 1;
+    align-items: center;
+  }
+  .turn0-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .turn0-side h3 {
+    margin: 0 0 4px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .turn0-pokemon-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: var(--bg-elevated);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+    transition: all 0.15s;
+    position: relative;
+  }
+  .turn0-pokemon-btn:hover {
+    border-color: var(--accent);
+  }
+  .turn0-pokemon-btn.selected {
+    border-color: var(--accent);
+    background: var(--bg-panel);
+  }
+  .turn0-pokemon-btn .order-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .turn0-pokemon-btn img {
+    width: 48px; height: 48px;
+    image-rendering: pixelated;
+    object-fit: contain;
+  }
+  .turn0-pokemon-btn .slot-letter {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--accent);
+    width: 16px;
+  }
+  .turn0-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .turn0-start {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .turn0-start:disabled {
+    background: var(--line);
+    cursor: not-allowed;
+    color: var(--ink-mute);
+  }
+  .turn0-start:not(:disabled):hover {
+    background: var(--ink);
+  }
+  .field-size-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-top: 12px;
+  }
+  .field-size-row label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+  }
+  .field-size-row select {
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+  }
+
+  /* Battle field (Turn 1+) */
+  .battle-field {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 48px;
+  }
+  .field-row-back {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px;
+    min-height: 60px;
+  }
+  .field-row-back img {
+    width: 44px; height: 44px;
+    image-rendering: pixelated;
+    object-fit: contain;
+    cursor: help;
+    opacity: 0.85;
+  }
+  .field-row-active {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr 50px 1fr;
+    align-items: center;
+    position: relative;
+    padding: 0 60px;
+  }
+  .field-row-active .opp-active, .field-row-active .self-active {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+  }
+  .field-row-active .opp-active { align-self: end; grid-row: 1; }
+  .field-row-active .self-active { align-self: start; grid-row: 3; }
+
+  /* ============ FIELD EFFECTS ============ */
+  .field-fx-bar {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    z-index: 7;
+    pointer-events: none;
+  }
+  .field-fx-bar > * { pointer-events: auto; }
+  .field-fx-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .field-fx-badge {
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent-3);
+    color: var(--accent-3);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .field-fx-badge.inherited {
+    border-style: dashed;
+    opacity: 0.8;
+  }
+  .field-fx-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .field-fx-btn:hover {
+    border-color: var(--accent-3);
+    color: var(--accent-3);
+  }
+
+  /* ============ WIN/LOSE BUTTONS ============ */
+  .winlose-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding: 8px 8px 12px 8px;
+    flex: 0 0 auto;
+    z-index: 6;
+    /* The bar fills the row width; only the buttons should catch clicks so
+       elements positioned absolutely at the same row (like the field-fx-bar
+       on the right) remain interactive. */
+    pointer-events: none;
+  }
+  .winlose-bar > * { pointer-events: auto; }
+  .winlose-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+    min-height: 36px;
+  }
+  .winlose-btn:hover {
+    border-color: var(--ink);
+  }
+  .winlose-btn.win.active {
+    background: var(--good);
+    border-color: var(--good);
+    color: white;
+  }
+  .winlose-btn.lose.active {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: white;
+  }
+  .winlose-btn.win::before { content: "▲ "; }
+  .winlose-btn.lose::before { content: "▼ "; }
+
+  /* Pinned log entry showing the win/lose state — not draggable, not deletable */
+  .log-line.terminal {
+    cursor: default;
+    background: var(--bg-panel-2);
+    font-weight: 600;
+    border-top: 1px solid var(--line);
+    border-bottom: none;
+  }
+  .log-line.terminal.win { color: var(--good); }
+  .log-line.terminal.lose { color: var(--bad); }
+  .log-line.terminal .drag-grip { display: none; }
+  .log-line.terminal .del-btn { display: none; }
+
+  /* Pinned field effects entry — italic, listed above the terminal entry */
+  .log-line.field-fx-line {
+    cursor: default;
+    font-style: italic;
+    color: var(--accent-3);
+    background: transparent;
+    border-bottom: none;
+  }
+  .log-line.field-fx-line .log-num { color: var(--accent-3); opacity: 0.8; }
+  .log-line.field-fx-line .drag-grip { display: none; }
+  .log-line.field-fx-line .del-btn { display: none; }
+
+  /* Flowchart terminal node (WINNING / LOSING) */
+  .node.terminal {
+    cursor: default;
+    border-style: dashed;
+    border-width: 2px;
+    background: var(--bg-panel-2);
+  }
+  .node.terminal.win {
+    border-color: var(--good);
+    color: var(--good);
+  }
+  .node.terminal.lose {
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+  .node.terminal .node-turn { color: inherit; opacity: 0.7; }
+  .node.terminal .node-var { color: inherit; }
+
+  /* (50/50) suffix on a node label — purely a visual indicator, never exported */
+  .node .ff-tag {
+    color: var(--accent-3);
+    font-size: 10px;
+    font-weight: 500;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+  }
+  .field-mon {
+    cursor: pointer;
+    position: relative;
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .field-mon img {
+    width: 96px; height: 96px;
+    image-rendering: pixelated;
+    object-fit: contain;
+    transition: transform 0.15s;
+  }
+  .field-mon:hover img { transform: scale(1.05); }
+  .field-mon.fainted img { filter: grayscale(1) brightness(0.7); }
+  .field-mon .label {
+    position: absolute;
+    bottom: -4px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .field-mon .hp-label {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .turn-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+  }
+  .turn-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .turn-nav.prev { left: 10px; }
+  .turn-nav.next { right: 10px; }
+
+  /* Hover tooltip */
+  .mon-tooltip {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+    max-width: 260px;
+    white-space: pre-line;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .mon-tooltip .tt-title {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .mon-tooltip.node-log-tooltip {
+    max-width: 360px;
+    white-space: normal;
+  }
+  .mon-tooltip.node-log-tooltip > div { padding: 1px 0; }
+
+  /* Context menus */
+  .context-menu {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    z-index: 1001;
+    min-width: 160px;
+    box-shadow: var(--shadow);
+    padding: 4px;
+  }
+  .context-menu .item {
+    padding: 7px 12px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    border-radius: 3px;
+    position: relative;
+    color: var(--ink);
+  }
+  .context-menu .item:hover {
+    background: var(--accent);
+    color: white;
+  }
+  .context-menu .item.has-sub::after {
+    content: "▸";
+    position: absolute;
+    right: 10px;
+  }
+  .context-menu .item.disabled {
+    color: var(--ink-mute);
+    cursor: not-allowed;
+  }
+  .context-menu .item.disabled:hover {
+    background: transparent;
+    color: var(--ink-mute);
+  }
+  .context-submenu {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    z-index: 1002;
+    min-width: 140px;
+    box-shadow: var(--shadow);
+    padding: 4px;
+  }
+
+  /* ============ COLUMN 3: NODE EDITOR ============ */
+  .node-panel-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .node-panel-controls button {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .node-panel-controls button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nash-btn {
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1px;
+    line-height: 1.1;
+    padding: 5px 12px !important;
+    min-width: 130px;
+  }
+  .nash-btn .nash-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .nash-btn .nash-state {
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.3px;
+    text-transform: none;
+    font-weight: 400;
+  }
+  .nash-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .nash-btn.active .nash-state {
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .nash-btn.active:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: white;
+  }
+
+  /* Yellow glow applied to nodes on a Nash-found path */
+  @keyframes nash-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.6), 0 0 16px 4px rgba(255, 204, 0, 0.5); }
+    50%      { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 22px 6px rgba(255, 204, 0, 0.7); }
+  }
+  .node.nash-glow {
+    animation: nash-pulse 1.6s ease-in-out infinite;
+    border-color: #d4a015 !important;
+    z-index: 3;
+  }
+  [data-theme="dark"] .node.nash-glow {
+    border-color: #f0c850 !important;
+  }
+  .zoom-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    user-select: none;
+  }
+  .zoom-hint kbd {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+  .node-canvas-wrap {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    background:
+      radial-gradient(circle, var(--grid) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+  .node-canvas {
+    position: relative;
+    transform-origin: 0 0;
+    min-width: 100%;
+    min-height: 100%;
+  }
+  .node {
+    position: absolute;
+    background: var(--bg-elevated);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    user-select: none;
+    min-width: 100px;
+    text-align: center;
+    transition: border-color 0.15s, transform 0.1s;
+    box-shadow: var(--shadow);
+  }
+  .node:hover {
+    border-color: var(--accent);
+  }
+  .node.active {
+    border-color: var(--accent);
+    background: var(--bg-panel);
+  }
+  .node.active::before {
+    content: "▶";
+    position: absolute;
+    left: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+  }
+  .node .node-turn {
+    font-weight: 700;
+    color: var(--accent-2);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .node .node-var {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ============ BOTTOM LOG ============ */
+  .log-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+  .log-body {
+    flex: 1;
+    overflow: auto;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .log-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 6px;
+    border-bottom: 1px dashed var(--line-soft);
+    cursor: grab;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .log-line:active { cursor: grabbing; }
+  .log-line .drag-grip {
+    color: var(--ink-mute);
+    font-size: 14px;
+    line-height: 1;
+    flex: 0 0 auto;
+    width: 14px;
+    text-align: center;
+    opacity: 0.5;
+    cursor: grab;
+  }
+  .log-line:hover .drag-grip { opacity: 1; }
+  .log-line.dragging {
+    opacity: 0.4;
+    background: var(--accent);
+    color: white;
+  }
+  .log-line.drop-above {
+    border-top: 2px solid var(--accent);
+    margin-top: -2px;
+  }
+  .log-line.drop-below {
+    border-bottom: 2px solid var(--accent);
+    margin-bottom: -2px;
+  }
+  .log-line.drag-ghost {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    padding: 6px 10px;
+    width: auto;
+    max-width: 80vw;
+  }
+  .log-line:hover { background: var(--bg-elevated); }
+  .log-line .log-text {
+    flex: 1;
+    cursor: pointer;
+    padding: 2px 0;
+  }
+  .log-line.failed .log-text {
+    text-decoration: line-through;
+    color: var(--ink-mute);
+    opacity: 0.75;
+  }
+  .log-line.failed .log-num {
+    color: var(--bad);
+    opacity: 0.7;
+  }
+  .log-line .log-num {
+    color: var(--ink-mute);
+    font-size: 11px;
+    min-width: 30px;
+  }
+  .log-line .del-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--bad);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 6px;
+    border-radius: 2px;
+  }
+  .log-line .del-btn:hover {
+    background: var(--bad);
+    color: white;
+  }
+
+  /* Log Reset button — sits in the log panel header next to the variant tag */
+  .log-reset-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .log-reset-btn:hover {
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+  .log-reset-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .log-reset-btn:disabled:hover {
+    border-color: var(--line);
+    color: var(--ink-mute);
+  }
+
+  /* ============ MODALS ============ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    min-width: 480px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .modal h2 {
+    margin: 0 0 14px 0;
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  /* Field effects modal */
+  .field-fx-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    min-width: 260px;
+  }
+  .field-fx-modal-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent-3);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .field-fx-modal-row.inherited {
+    opacity: 0.75;
+    border-left-style: dashed;
+  }
+  .field-fx-modal-row .fx-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--accent-3);
+  }
+  .field-fx-modal-row .fx-turns {
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .field-fx-modal-row .fx-del {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--bad);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 6px;
+    border-radius: 2px;
+    line-height: 1;
+  }
+  .field-fx-modal-row .fx-del:hover {
+    background: var(--bad);
+    color: white;
+  }
+  .field-fx-modal-row .fx-edit {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--accent-2);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 6px;
+    border-radius: 2px;
+    line-height: 1;
+  }
+  .field-fx-modal-row .fx-edit:hover {
+    background: var(--accent-2);
+    color: white;
+  }
+  .field-fx-modal-row .fx-edit-input {
+    width: 60px;
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--accent-2);
+    border-radius: 2px;
+    padding: 3px 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: right;
+  }
+  .field-fx-modal-row .fx-edit-ok,
+  .field-fx-modal-row .fx-edit-cancel {
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 6px;
+    border-radius: 2px;
+    line-height: 1;
+  }
+  .field-fx-modal-row .fx-edit-ok { color: var(--good); }
+  .field-fx-modal-row .fx-edit-ok:hover { background: var(--good); color: white; }
+  .field-fx-modal-row .fx-edit-cancel { color: var(--bad); }
+  .field-fx-modal-row .fx-edit-cancel:hover { background: var(--bad); color: white; }
+  .field-fx-modal-row .fx-lock { font-size: 11px; opacity: 0.7; cursor: help; }
+
+  .field-fx-modal-add input {
+    width: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  .modal textarea {
+    width: 100%;
+    min-height: 280px;
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    resize: vertical;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 14px;
+  }
+  .modal-actions button {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .modal-actions button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .modal-actions button:hover { border-color: var(--accent); }
+  .modal-actions button.primary:hover { background: var(--ink); border-color: var(--ink); }
+  .modal input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+
+  /* Target picker */
+  .target-side-group {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 12px 12px;
+    margin-bottom: 10px;
+    position: relative;
+    background: var(--bg-panel-2);
+  }
+  .target-side-group.opp { border-left: 4px solid var(--accent-2); }
+  .target-side-group.self { border-left: 4px solid var(--accent); }
+  .target-side-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .target-side-group.opp .target-side-label { color: var(--accent-2); }
+  .target-side-group.self .target-side-label { color: var(--accent); }
+  .target-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 8px;
+    margin: 0;
+  }
+  .target-card {
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 6px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--bg-elevated);
+    transition: all 0.1s;
+  }
+  .target-card.selected {
+    border-color: var(--accent);
+    background: var(--bg-panel);
+  }
+  .target-card img {
+    width: 48px; height: 48px;
+    image-rendering: pixelated;
+    object-fit: contain;
+  }
+  .target-card .slot {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .target-card .nm {
+    font-size: 10px;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Autocomplete */
+  .autocomplete-list {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9000;
+    box-shadow: var(--shadow);
+    min-width: 200px;
+  }
+  .autocomplete-item {
+    padding: 6px 10px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .autocomplete-item:hover, .autocomplete-item.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Sub-pokemon switch list */
+  .switch-list {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    z-index: 1002;
+    box-shadow: var(--shadow);
+    padding: 4px;
+    min-width: 150px;
+  }
+  .switch-list .switch-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: var(--sans);
+    font-size: 13px;
+  }
+  .switch-list .switch-item:hover {
+    background: var(--accent);
+    color: white;
+  }
+  .switch-list img {
+    width: 28px; height: 28px;
+    image-rendering: pixelated;
+    object-fit: contain;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-panel); }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-mute); }
+
+  /* ============ MOBILE TABBAR (hidden on desktop) ============ */
+  .mobile-tabbar { display: none; }
+
+  /* ============ MOBILE / TABLET (≤900px) ============ */
+  @media (max-width: 900px) {
+    html, body { font-size: 14px; }
+    body {
+      /* Disable global page background grid on mobile — it's distracting on small screens */
+      background-image: none;
+    }
+
+    .app {
+      grid-template-rows: 52px 36px 1fr;
+      column-gap: 4px;
+      padding: 4px;
+      /* Reserve bottom space for the fixed log panel + handle */
+      padding-bottom: calc(var(--mobileLogH) + 26px);
+    }
+    /* Each grid item must respect its row size, not expand for content */
+    .app > * { min-height: 0; }
+
+    /* Header: stack download + theme buttons on left as icons, smaller brand */
+    header.topbar {
+      grid-template-columns: auto 1fr auto;
+      padding: 0 10px;
+    }
+    .brand {
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+    .brand::before, .brand::after { display: none; }
+    .credits { display: none; }
+    .download-btn {
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+    .download-btn span.dl-label { display: none; }
+    .theme-toggle { padding: 6px 8px; font-size: 10px; }
+
+    /* Show the tab bar on mobile (Team / Battle / Flow — no Log button) */
+    .mobile-tabbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 3px;
+      box-shadow: var(--shadow);
+    }
+    .mobile-tabbar button[data-tab="log"] { display: none; }
+    .mobile-tabbar button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 5px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+      min-height: 28px;
+      touch-action: manipulation;
+    }
+    .mobile-tabbar button.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Stack/tab the middle row instead of side-by-side columns */
+    .middle {
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .middle > .panel,
+    .middle > .splitter {
+      display: none;
+    }
+    .middle > .panel.mobile-active {
+      display: flex;
+      height: 100%;
+      margin: 0;
+    }
+
+    /* Desktop splitter (vertical column dividers) hidden on mobile */
+    .splitter { display: none !important; }
+
+    /* Mobile log: fixed at bottom of viewport, with the splitter handle just
+       above it. Both are taken out of the grid flow and positioned absolutely
+       so their heights are completely independent of grid behavior. */
+    .splitter-h {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      left: 4px;
+      right: 4px;
+      bottom: calc(var(--mobileLogH) + 4px);
+      height: 22px;
+      margin: 0;
+      cursor: row-resize;
+      touch-action: none;
+      background: var(--bg-panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      z-index: 5;
+    }
+    .splitter-h::before {
+      content: "";
+      width: 56px;
+      height: 4px;
+      background: var(--ink-mute);
+      border-radius: 2px;
+      opacity: 0.7;
+    }
+    .splitter-h.dragging { background: var(--accent); }
+    .splitter-h.dragging::before { background: white; opacity: 1; }
+
+    .log-panel {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      top: auto;
+      height: var(--mobileLogH);
+      max-height: none;
+      overflow: hidden;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+      z-index: 4;
+    }
+    .log-panel .panel-header { flex: 0 0 auto; }
+    .log-panel .log-body {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Make panel headers a bit tighter */
+    .panel-header { padding: 8px 12px; font-size: 10px; }
+
+    /* Team panel — smaller fields, single column */
+    .team-controls { grid-template-columns: 1fr 1fr; }
+    .field { grid-template-columns: 60px 1fr; }
+    .field label { font-size: 9px; }
+    .field input { font-size: 14px; padding: 7px 8px; min-height: 36px; }
+    .pokemon-card-header { padding: 10px 12px; min-height: 40px; }
+
+    /* Battle screen — vertical, smaller sprites, bigger touch targets */
+    .battle-turn-info { top: 8px; left: 10px; font-size: 12px; }
+    /* Allow the battle pane to scroll vertically on mobile — turn 0 grid stacks
+       three sections (self / center / opp) which can exceed viewport height. */
+    .battle-body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .turn0-screen {
+      padding: 44px 10px 10px 10px;
+      height: auto;
+      min-height: 100%;
+    }
+    .turn0-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .turn0-side h3 { font-size: 10px; }
+    .turn0-pokemon-btn { padding: 8px 10px; font-size: 14px; min-height: 56px; }
+    .turn0-pokemon-btn img { width: 40px; height: 40px; }
+    .turn0-start { padding: 12px 24px; font-size: 13px; }
+    .field-row-active { padding: 0 40px; }
+    .field-mon { width: 80px; height: 80px; }
+    .field-mon img { width: 80px; height: 80px; }
+    .field-row-back img { width: 36px; height: 36px; }
+    .turn-nav { width: 44px; height: 44px; font-size: 22px; }
+    .turn-nav.prev { left: 4px; }
+    .turn-nav.next { right: 4px; }
+
+    /* Node canvas: pinch-to-zoom is handled in JS; keep canvas pannable */
+    .node-canvas-wrap {
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+    .node { font-size: 12px; padding: 10px 8px; }
+    .node .node-turn { font-size: 9px; }
+    .node .node-var { font-size: 13px; }
+
+    /* Context menus on mobile: centered card that floats above ALL panels including
+       the log. Backdrop dimmer makes it clear the menu is modal. */
+    .context-menu, .switch-list {
+      min-width: 220px;
+      padding: 6px;
+      z-index: 4000 !important;
+    }
+    .context-menu .item, .switch-list .switch-item {
+      padding: 12px 14px;
+      font-size: 14px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+    .context-menu .item.has-sub::after { content: "▾"; }
+    .switch-list {
+      position: fixed;
+      left: 50% !important;
+      top: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%);
+      width: min(86vw, 340px);
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    /* Backdrop for mobile context menus */
+    .mobile-ctx-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(2px);
+      z-index: 3999;
+    }
+
+    /* Modals: full-width on mobile */
+    .modal {
+      min-width: 0;
+      width: calc(100vw - 24px);
+      max-width: 100vw;
+      max-height: 90vh;
+      padding: 14px;
+      border-radius: var(--radius);
+    }
+    .modal h2 { font-size: 16px; }
+    .modal textarea { min-height: 200px; font-size: 13px; }
+    .modal-actions button {
+      padding: 11px 16px;
+      font-size: 12px;
+      min-height: 44px;
+    }
+    .modal input[type="text"] {
+      font-size: 16px; /* prevents iOS auto-zoom on focus */
+      padding: 10px 12px;
+      min-height: 44px;
+    }
+    /* Target picker: bigger cards */
+    .target-picker-grid { grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); }
+    .target-card { padding: 8px 6px; min-height: 80px; }
+    .target-card img { width: 40px; height: 40px; }
+
+    /* Buttons everywhere */
+    .team-controls button,
+    .node-panel-controls button {
+      padding: 10px 8px;
+      font-size: 11px;
+      min-height: 40px;
+    }
+    .zoom-hint { display: none; } /* replaced with pinch hint below */
+    .node-panel-controls::after {
+      content: "Pinch to zoom · drag to pan";
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-mute);
+      letter-spacing: 0.3px;
+    }
+
+    /* Autocomplete dropdowns: bigger tap targets */
+    .autocomplete-item { padding: 10px 12px; font-size: 14px; min-height: 40px; }
+
+    /* Log lines */
+    .log-line { padding: 6px 6px; }
+    .log-line .log-text { font-size: 13px; }
+    .log-line .del-btn {
+      min-width: 32px; min-height: 32px;
+      font-size: 18px;
+    }
+
+    /* Hover tooltip becomes a tap-toggled bottom sheet on mobile */
+    .mon-tooltip.mobile {
+      left: 8px !important;
+      right: 8px !important;
+      bottom: 8px !important;
+      top: auto !important;
+      max-width: none;
+      width: auto;
+      padding: 14px 16px;
+      font-size: 13px;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.3);
+      pointer-events: auto;
+      z-index: 2500;
+    }
+    .mon-tooltip.mobile .tt-title { font-size: 16px; }
+    .mon-tooltip.mobile::after {
+      content: "Tap anywhere to dismiss";
+      display: block;
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--ink-mute);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .app { grid-template-rows: 48px 32px 1fr; }
+    .brand { font-size: 13px; }
+    .mobile-tabbar button { font-size: 9px; }
+    .field { grid-template-columns: 56px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="left-actions">
+      <a class="download-btn" href="https://github.com/skuntank-dev/pokemon-flowchart-helper/releases" target="_blank" rel="noopener">⬇<span class="dl-label"> Download</span></a>
+      <button class="theme-toggle" id="themeToggle">◐<span class="dl-label"> Theme</span></button>
+    </div>
+    <div class="brand">Pokemon Flowchart Tool</div>
+    <div class="credits">Developed by <a href="https://skuntank.dev" target="_blank" rel="noopener">skuntank-dev</a></div>
+  </header>
+
+  <!-- MOBILE TABBAR (visible only on small screens) -->
+  <div class="mobile-tabbar" id="mobileTabbar">
+    <button data-tab="team" class="active">◇ Team</button>
+    <button data-tab="battle">◈ Battle</button>
+    <button data-tab="flow">◆ Flow</button>
+    <button data-tab="log">▤ Log</button>
+  </div>
+
+  <!-- MIDDLE ROW -->
+  <div class="middle">
+    <!-- COL 1: TEAM -->
+    <div class="panel" data-mobile-panel="team">
+      <div class="panel-header">
+        <span>◇ Teams</span>
+        <span class="tag">SETUP</span>
+      </div>
+      <div class="panel-body">
+        <div class="team-controls">
+          <button onclick="openImportModal()">Import</button>
+          <button onclick="openExportModal()">Export</button>
+          <button onclick="openImportSideModal('self')">Import 1-6</button>
+          <button onclick="openImportSideModal('opp')">Import A-F</button>
+        </div>
+        <div class="team-controls-url-row">
+          <button class="url-export-btn" onclick="openExportUrlModal()">Export as URL</button>
+        </div>
+
+        <div class="team-section-label">Self · 1-6</div>
+        <div id="selfTeam"></div>
+
+        <div class="team-section-label">Opponent · A-F</div>
+        <div id="oppTeam"></div>
+      </div>
+    </div>
+
+    <div class="splitter" id="splitter1" data-target="col1" title="Drag to resize"></div>
+
+    <!-- COL 2: BATTLE -->
+    <div class="panel battle-panel" data-mobile-panel="battle">
+      <div class="panel-header">
+        <span>◈ Battlefield</span>
+        <span class="tag" id="battleStatusTag">TURN 0</span>
+      </div>
+      <div class="panel-body battle-body" id="battleBody">
+        <div class="battle-disabled-overlay" id="battleOverlay">
+          Add at least one Pokémon with one move<br>to each side to begin.
+        </div>
+        <div class="battle-turn-info" id="battleTurnInfo">Turn 0</div>
+        <button class="battle-flip-btn" id="battleFlipBtn" onclick="flipSides()" title="Swap self and opponent (1↔A, etc.)">Flip</button>
+        <div id="battleContent"></div>
+      </div>
+    </div>
+
+    <div class="splitter" id="splitter2" data-target="col3" title="Drag to resize"></div>
+
+    <!-- COL 3: FLOWCHART -->
+    <div class="panel" data-mobile-panel="flow">
+      <div class="panel-header">
+        <span>◆ Flowchart</span>
+        <span class="tag">NODES</span>
+      </div>
+      <div class="node-panel-controls">
+        <button onclick="createVariationAtCurrentTurn()">+ Variation</button>
+        <button id="nashBtn" class="nash-btn" onclick="openNashModal()">
+          <span class="nash-title">Nash Finder</span>
+          <span class="nash-state" id="nashState">off</span>
+        </button>
+        <span class="zoom-hint" title="Hold Ctrl (or ⌘ on Mac) and scroll over the canvas to zoom"><kbd>Ctrl</kbd> + scroll to zoom</span>
+      </div>
+      <div class="node-canvas-wrap" id="nodeCanvasWrap">
+        <div class="node-canvas" id="nodeCanvas">
+          <svg id="nodeSvg" style="position:absolute;inset:0;pointer-events:none;width:100%;height:100%;"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="splitter-h" id="splitterH" title="Drag to resize log"></div>
+
+  <!-- BOTTOM LOG -->
+  <div class="log-panel">
+    <div class="panel-header">
+      <span>▤ Battle Log</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;">
+        <button class="log-reset-btn" id="logResetBtn" onclick="resetCurrentTurnLog()" title="Clear all actions for the current turn variation">Reset</button>
+        <span class="tag" id="logVariantTag">—</span>
+      </span>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+</div>
+
+<script>
+/* =================== SPRITES PATH =================== */
+const SPRITES_PATH = "assets/sprites/home/";
+
+/* =================== POKEMON / MOVE LISTS =================== */
+let POKEMON_LIST = [];
+let MOVE_LIST = [];
+
+async function loadAssetLists() {
+  try {
+    const pkmnRes = await fetch("assets/pkmnlist.txt");
+    const pkmnText = await pkmnRes.text();
+    POKEMON_LIST = pkmnText.split("\n").map(s => s.trim()).filter(Boolean);
+  } catch(e) { POKEMON_LIST = []; }
+  try {
+    const moveRes = await fetch("assets/movelist.txt");
+    const moveText = await moveRes.text();
+    MOVE_LIST = moveText.split("\n").map(s => s.trim()).filter(Boolean);
+  } catch(e) { MOVE_LIST = []; }
+}
+
+/* =================== STATE =================== */
+const SLOTS_SELF = ['1','2','3','4','5','6'];
+const SLOTS_OPP = ['A','B','C','D','E','F'];
+const BANNED_MOVES = ['mega', 'zmove', 'dynamax', 'terast'];
+
+function makeBlankPokemon() {
+  return {
+    name: '', gender: '', shiny: '', tera: '',
+    item: '', nature: '', ability: '',
+    ivs: '', evs: '',
+    moves: ['', '', '', '']
+  };
+}
+
+const state = {
+  pokemon: {}, // slot -> data
+  fieldSize: 2,
+  // Flowchart nodes
+  // Each node = { id, turn, variation, parentId, snapshot }
+  nodes: [],
+  currentNodeId: null,
+  // Turn 0 selection
+  turn0Selection: { selfOrder: [], oppOrder: [] },
+  // Nash Finder: { active: bool, startTurn: number }
+  nash: { active: false, startTurn: 0 }
+};
+
+// Initialize blanks
+[...SLOTS_SELF, ...SLOTS_OPP].forEach(s => state.pokemon[s] = makeBlankPokemon());
+
+/* Snapshot structure for an active battle state (Turn 1+):
+  {
+    active: { 'A': {hp:'100%', extra:[...flags]}, ... } // by slot
+    field: { opp: ['A','B'], self: ['1','2'] } // positions on field
+    back: { opp: ['C',...], self: ['3',...] }
+    // log entries are per-turn (stored on the node)
+    log: [ {type, raw, text} ]
+    selectedOrder: { opp:[...], self:[...] } // turn 0 picks (only on turn 0)
+  }
+*/
+
+/* =================== UTIL =================== */
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function isSelfSlot(s) { return SLOTS_SELF.includes(s); }
+function isOppSlot(s) { return SLOTS_OPP.includes(s); }
+function spriteUrl(name) {
+  if (!name) return "";
+  return SPRITES_PATH + name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'') + ".png";
+}
+function pokemonReady(slot) {
+  const p = state.pokemon[slot];
+  if (!p.name) return false;
+  return p.moves.some(m => m.trim() !== '');
+}
+function anySelfReady() { return SLOTS_SELF.some(pokemonReady); }
+function anyOppReady() { return SLOTS_OPP.some(pokemonReady); }
+
+/* =================== AUTOCOMPLETE =================== */
+let activeAutocomplete = null;
+
+function setupAutocomplete(input, getList, opts={}) {
+  input.addEventListener('input', () => showAutocomplete(input, getList(), opts));
+  input.addEventListener('focus', () => showAutocomplete(input, getList(), opts));
+  input.addEventListener('blur', () => setTimeout(closeAutocomplete, 150));
+  input.addEventListener('keydown', (e) => {
+    if (!activeAutocomplete) return;
+    const items = activeAutocomplete.querySelectorAll('.autocomplete-item');
+    if (!items.length) return;
+    let activeIdx = [...items].findIndex(i => i.classList.contains('active'));
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (activeIdx >= 0) items[activeIdx].classList.remove('active');
+      activeIdx = (activeIdx + 1) % items.length;
+      items[activeIdx].classList.add('active');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (activeIdx >= 0) items[activeIdx].classList.remove('active');
+      activeIdx = (activeIdx - 1 + items.length) % items.length;
+      items[activeIdx].classList.add('active');
+    } else if (e.key === 'Enter') {
+      if (activeIdx >= 0) {
+        e.preventDefault();
+        input.value = items[activeIdx].dataset.value;
+        input.dispatchEvent(new Event('change'));
+        closeAutocomplete();
+      }
+    } else if (e.key === 'Escape') {
+      closeAutocomplete();
+    }
+  });
+}
+function showAutocomplete(input, list, opts) {
+  closeAutocomplete();
+  const q = input.value.trim().toLowerCase();
+  if (!q) return;
+  const matches = list.filter(item => item.toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) return;
+  const ul = document.createElement('div');
+  ul.className = 'autocomplete-list';
+  matches.forEach(m => {
+    const li = document.createElement('div');
+    li.className = 'autocomplete-item';
+    li.textContent = m;
+    li.dataset.value = m;
+    const pick = (e) => {
+      e.preventDefault();
+      input.value = m;
+      input.dispatchEvent(new Event('change'));
+      closeAutocomplete();
+    };
+    li.addEventListener('mousedown', pick);
+    li.addEventListener('touchstart', pick, { passive: false });
+    ul.appendChild(li);
+  });
+  const rect = input.getBoundingClientRect();
+  // Append first so we can measure the height for flip-up decisions
+  document.body.appendChild(ul);
+  ul.style.left = rect.left + 'px';
+  ul.style.width = rect.width + 'px';
+  const ulH = ul.offsetHeight;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  if (spaceBelow < ulH + 8 && spaceAbove > spaceBelow) {
+    // Flip above the input — useful on mobile when the keyboard covers the bottom
+    ul.style.top = (rect.top - ulH - 2) + 'px';
+  } else {
+    ul.style.top = (rect.bottom + 2) + 'px';
+  }
+  activeAutocomplete = ul;
+}
+function closeAutocomplete() {
+  if (activeAutocomplete) { activeAutocomplete.remove(); activeAutocomplete = null; }
+}
+
+/* =================== TEAM PANEL UI =================== */
+function renderTeams() {
+  renderTeamSide(SLOTS_SELF, 'selfTeam', false);
+  renderTeamSide(SLOTS_OPP, 'oppTeam', true);
+  updateBattleAvailability();
+}
+function renderTeamSide(slots, containerId, isOpp) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  slots.forEach(slot => {
+    const p = state.pokemon[slot];
+    const card = document.createElement('div');
+    card.className = 'pokemon-card' + (isOpp ? ' opp' : '');
+    card.innerHTML = `
+      <div class="pokemon-card-header">
+        <span class="slot">${slot}</span>
+        <span class="name">${p.name || '<empty>'}</span>
+        <span class="chev">▸</span>
+      </div>
+      <div class="pokemon-card-body"></div>`;
+    const header = card.querySelector('.pokemon-card-header');
+    header.addEventListener('click', () => {
+      card.classList.toggle('open');
+    });
+    const body = card.querySelector('.pokemon-card-body');
+    body.appendChild(buildField('Pokémon', p.name, v => {
+      p.name = v;
+      // Update only the visible label — do NOT rebuild the card, since that
+      // would collapse the user's expanded view mid-edit.
+      updateNameLabel(card, p);
+      updateBattleAvailability();
+      rebuildAllNodes();
+      renderBattle();
+      renderNodeEditor();
+      renderLog();
+    }, 'pkmn'));
+    for (let i = 0; i < 4; i++) {
+      body.appendChild(buildField('Move ' + (i+1), p.moves[i], v => {
+        if (BANNED_MOVES.includes(v.trim().toLowerCase())) {
+          alert(`"${v}" is reserved as a mechanic. Use the mechanic option from the context menu instead.`);
+          p.moves[i] = '';
+          // Clear the offending input without rebuilding the card.
+          const inputs = body.querySelectorAll('input');
+          if (inputs[i + 1]) inputs[i + 1].value = '';
+          return;
+        }
+        p.moves[i] = v;
+        updateBattleAvailability();
+        // Moves appear in logs; rebuild so log text reflects current moveset.
+        rebuildAllNodes();
+        renderLog();
+      }, 'move'));
+    }
+    body.appendChild(buildField('Ability', p.ability, v => p.ability = v));
+    body.appendChild(buildField('Gender', p.gender, v => p.gender = v));
+    body.appendChild(buildField('Shiny', p.shiny, v => p.shiny = v));
+    body.appendChild(buildField('Tera', p.tera, v => p.tera = v));
+    body.appendChild(buildField('Item', p.item, v => p.item = v));
+    body.appendChild(buildField('Nature', p.nature, v => p.nature = v));
+    body.appendChild(buildField('IVs', p.ivs, v => p.ivs = v));
+    body.appendChild(buildField('EVs', p.evs, v => p.evs = v));
+    wrap.appendChild(card);
+  });
+}
+function updateNameLabel(card, p) {
+  card.querySelector('.name').textContent = p.name || '<empty>';
+}
+function buildField(label, value, onChange, kind) {
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  const lbl = document.createElement('label'); lbl.textContent = label;
+  const inp = document.createElement('input'); inp.type = 'text'; inp.value = value || '';
+  inp.addEventListener('change', () => onChange(inp.value));
+  inp.addEventListener('blur', () => onChange(inp.value));
+  if (kind === 'pkmn') setupAutocomplete(inp, () => POKEMON_LIST);
+  else if (kind === 'move') setupAutocomplete(inp, () => MOVE_LIST);
+  wrap.appendChild(lbl); wrap.appendChild(inp);
+  return wrap;
+}
+
+/* =================== BATTLE AVAILABILITY =================== */
+function updateBattleAvailability() {
+  const ok = anySelfReady() && anyOppReady();
+  document.getElementById('battleOverlay').style.display = ok ? 'none' : 'flex';
+  if (ok) renderBattle();
+}
+
+/* =================== FLOWCHART NODES =================== */
+/* =================== VARIATION NAMING (HIERARCHICAL) ===================
+   Variation names form an alternating number/letter path:
+     1, 2, 3, ..., 9, 10, 11, ..., 99, 100, ...    (number segments)
+     a, b, c, ..., z, aa, bb, ..., zz, aaa, ...    (letter segments)
+   Examples: "1", "1a", "1a3", "1a3b", "12c100zzz", etc.
+   Segment at position k (1-indexed) is a number if k is odd, letter if k is even.
+
+   Branching rules:
+   - At Turn 0: "+Variation" creates a top-level peer (next number at depth 1).
+   - At Turn T > branch-turn of current variation: appends a NEW segment one level
+     deeper (alternating type), creating a sub-branch.
+   - At Turn T == branch-turn of current variation: increments the LAST segment to
+     produce a sibling at the same depth.
+
+   Each node stores .branchTurn = the turn at which its variation was first introduced.
+   This is needed so we can tell "is this where the variation began?" without
+   having to scan all nodes.
+*/
+
+function parseVariation(name) {
+  // Returns array of segments. Each segment is { kind:'num'|'let', text:'1'|'a', value:1 }
+  const segs = [];
+  let i = 0;
+  while (i < name.length) {
+    if (/\d/.test(name[i])) {
+      let j = i;
+      while (j < name.length && /\d/.test(name[j])) j++;
+      segs.push({ kind:'num', text: name.slice(i, j), value: parseInt(name.slice(i, j)) });
+      i = j;
+    } else if (/[a-z]/i.test(name[i])) {
+      let j = i;
+      while (j < name.length && /[a-z]/i.test(name[j])) j++;
+      segs.push({ kind:'let', text: name.slice(i, j).toLowerCase(), value: letterToValue(name.slice(i, j).toLowerCase()) });
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return segs;
+}
+
+// Letter encoding: a=1, b=2, ..., z=26, aa=27, bb=28, ..., zz=52, aaa=53, ...
+// Each "row" of length L contains 26 entries: aaaa, bbbb, etc. all length L.
+// Wait — re-read spec: "a->z->aa->zz->aaa->zzz->aaaa->zzzz".
+// So sequence is: a, b, c, ..., z (26), aa, bb, cc, ..., zz (52), aaa, ..., zzz (78), ...
+// Each "tier" of length L contains 26 entries with all-same-letter at length L.
+function letterToValue(s) {
+  if (!s) return 0;
+  const L = s.length;
+  const ch = s.charCodeAt(0) - 97; // 0..25
+  // entries before this tier: 26 * (L - 1)
+  // position within tier: ch (so 'a'==0, 'b'==1, ..., 'z'==25)
+  return 26 * (L - 1) + ch + 1; // 1-indexed
+}
+function valueToLetter(v) {
+  if (v < 1) return 'a';
+  const tier = Math.floor((v - 1) / 26) + 1; // length
+  const ch = (v - 1) % 26; // 0..25
+  return String.fromCharCode(97 + ch).repeat(tier);
+}
+
+// Number sequence per original spec: 1,2,3,...,9,10,11,... (no skipping; the
+// "1->9->11->99->100" example from the original prompt was illustrative of where
+// digit-count jumps occur, not a skip pattern). Treat numbers as simple integers.
+function valueToNumber(v) { return String(Math.max(1, v)); }
+
+function segmentToText(kind, value) {
+  return kind === 'num' ? valueToNumber(value) : valueToLetter(value);
+}
+
+function variationToText(segs) {
+  return segs.map(s => s.text).join('');
+}
+
+function variationsInUse() {
+  return new Set(state.nodes.map(n => n.variation));
+}
+
+// Find the next available value for a sibling segment given a prefix and segment kind.
+// `prefixSegs` is the segments BEFORE the segment we're choosing.
+function nextSiblingValue(prefixSegs, kind) {
+  const prefixText = prefixSegs.map(s => s.text).join('');
+  const used = new Set();
+  state.nodes.forEach(n => {
+    if (!n.variation.startsWith(prefixText)) return;
+    // Take the segment right after the prefix
+    const segs = parseVariation(n.variation);
+    if (segs.length <= prefixSegs.length) return;
+    const seg = segs[prefixSegs.length];
+    if (seg.kind !== kind) return;
+    used.add(seg.value);
+  });
+  let v = 1;
+  while (used.has(v)) v++;
+  return v;
+}
+
+function generateChildVariation(currentVar) {
+  // Append a new segment, type opposite of last segment.
+  const segs = parseVariation(currentVar);
+  const lastKind = segs.length ? segs[segs.length - 1].kind : 'num';
+  const newKind = lastKind === 'num' ? 'let' : 'num';
+  const v = nextSiblingValue(segs, newKind);
+  return currentVar + segmentToText(newKind, v);
+}
+
+function generateSiblingVariation(currentVar) {
+  // Increment the last segment among siblings sharing the same prefix.
+  const segs = parseVariation(currentVar);
+  if (segs.length === 0) return '1';
+  const prefix = segs.slice(0, -1);
+  const lastKind = segs[segs.length - 1].kind;
+  const v = nextSiblingValue(prefix, lastKind);
+  return prefix.map(s => s.text).join('') + segmentToText(lastKind, v);
+}
+
+function createInitialNodeIfNone() {
+  if (state.nodes.length === 0) {
+    const node = {
+      id: uid(), turn: 0, variation: '1', branchTurn: 0, parentId: null,
+      snapshot: { turn0: { selfOrder: [], oppOrder: [] }, active: {}, field: {opp:[],self:[]}, back:{opp:[],self:[]}, log: [] }
+    };
+    state.nodes.push(node);
+    state.currentNodeId = node.id;
+  }
+}
+
+function getCurrentNode() {
+  return state.nodes.find(n => n.id === state.currentNodeId);
+}
+
+function goToNode(id) {
+  state.currentNodeId = id;
+  const node = getCurrentNode();
+  if (node && node.turn === 0) {
+    state.turn0Selection = { 
+      selfOrder: [...(node.snapshot.turn0?.selfOrder || [])],
+      oppOrder: [...(node.snapshot.turn0?.oppOrder || [])]
+    };
+  }
+  renderAll();
+}
+
+// Walk up the variation hierarchy by stripping segments.
+// E.g. "1b1" -> ["1b1", "1b", "1"]; "1" -> ["1"].
+function variationAncestry(name) {
+  const segs = parseVariation(name);
+  const out = [];
+  for (let n = segs.length; n >= 1; n--) {
+    out.push(segs.slice(0, n).map(s => s.text).join(''));
+  }
+  return out;
+}
+
+// Find the parent node for arrow rendering: previous turn, longest-prefix variation match.
+function findParentForArrow(node) {
+  if (node.turn === 0) return null;
+  const ancestry = variationAncestry(node.variation);
+  for (const v of ancestry) {
+    const cand = state.nodes.find(n => n.turn === node.turn - 1 && n.variation === v);
+    if (cand) return cand;
+  }
+  return null;
+}
+
+// Compute which nodes are "50/50" — every leaf in their visual subtree terminates
+// in WIN or LOSE, and the number of WINs equals the number of LOSEs (≥ 1 each).
+// Returns a Set of node ids that qualify.
+function evaluateFiftyFifty() {
+  // Build childrenOf map using the SAME parent-resolution that draws arrows,
+  // so the subtree we evaluate matches what the user sees on screen.
+  const childrenOf = new Map();
+  state.nodes.forEach(n => {
+    const p = findParentForArrow(n);
+    if (!p) return;
+    if (!childrenOf.has(p.id)) childrenOf.set(p.id, []);
+    childrenOf.get(p.id).push(n);
+  });
+
+  // Memoized DFS. For each node, return an outcome shape:
+  //   { ok: bool, win: number, lose: number }
+  // ok=false means the subtree has at least one non-terminal leaf — disqualifies
+  // every ancestor as well.
+  const cache = new Map();
+  function evalNode(n) {
+    if (cache.has(n.id)) return cache.get(n.id);
+    const kids = childrenOf.get(n.id) || [];
+    let result;
+    if (kids.length === 0) {
+      // Leaf — must be terminal to count.
+      if (n.snapshot.winLose === 'win')      result = { ok: true, win: 1, lose: 0 };
+      else if (n.snapshot.winLose === 'lose') result = { ok: true, win: 0, lose: 1 };
+      else                                    result = { ok: false, win: 0, lose: 0 };
+    } else {
+      let ok = true, win = 0, lose = 0;
+      for (const k of kids) {
+        const r = evalNode(k);
+        if (!r.ok) { ok = false; break; }
+        win += r.win;
+        lose += r.lose;
+      }
+      // A node with children can ITSELF be terminal in principle, but per spec a
+      // terminal turn can't have descendants — the Next button is hidden. If we
+      // encounter that edge case anyway, prefer the kids' aggregated result.
+      result = { ok, win, lose };
+    }
+    cache.set(n.id, result);
+    return result;
+  }
+
+  const set = new Set();
+  state.nodes.forEach(n => {
+    const r = evalNode(n);
+    if (r.ok && r.win > 0 && r.win === r.lose) set.add(n.id);
+  });
+  return set;
+}
+
+/* =================== NASH FINDER ===================
+   When enabled, lights up paths from a chosen start-turn down to either a WIN
+   leaf or a 50/50 node. Winning paths take priority — if a starting node has
+   any path that reaches a WIN, only those win-paths glow; otherwise paths that
+   end at a 50/50 node glow. The glow is purely visual.
+*/
+function openNashModal() {
+  // If already active, clicking turns it off.
+  if (state.nash.active) {
+    state.nash.active = false;
+    updateNashButton();
+    renderNodeEditor();
+    return;
+  }
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Nash Finder</h2>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-mute);margin-bottom:10px;line-height:1.5;">
+      Lights up paths from a starting turn that reach a winning outcome — or, when none exist, paths that reach a balanced (50/50) subtree.
+    </div>
+    <label style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Turn:</label>
+    <input type="text" id="nashTurnInput" value="${state.nash.startTurn || 0}">
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+      <button class="primary" id="nashOk">Activate</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  const inp = backdrop.querySelector('#nashTurnInput');
+  inp.focus(); inp.select();
+  const submit = () => {
+    const v = parseInt(inp.value, 10);
+    if (isNaN(v) || v < 0) { alert('Enter a non-negative integer turn.'); return; }
+    state.nash.startTurn = v;
+    state.nash.active = true;
+    backdrop.remove();
+    updateNashButton();
+    renderNodeEditor();
+  };
+  backdrop.querySelector('#nashOk').addEventListener('click', submit);
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+    else if (e.key === 'Escape') backdrop.remove();
+  });
+}
+
+function updateNashButton() {
+  const btn = document.getElementById('nashBtn');
+  const state_el = document.getElementById('nashState');
+  if (!btn || !state_el) return;
+  if (state.nash.active) {
+    btn.classList.add('active');
+    state_el.textContent = `from turn: ${state.nash.startTurn}`;
+  } else {
+    btn.classList.remove('active');
+    state_el.textContent = 'off';
+  }
+}
+
+// Returns Set<nodeId> of nodes that lie on a Nash-found path.
+//
+// Rules:
+//   - Any path terminates at the FIRST node it reaches that is either a WIN
+//     leaf OR a 50/50 node. Nodes below the terminus are never lit.
+//   - "Winning path" = terminates at WIN. "Fair path" = terminates at 50/50.
+//   - Per start node: if any winning paths exist, glow ONLY those (not fair
+//     paths from that same start).
+//   - Cross-suppression: a fair path is also suppressed if there's a winning
+//     path (from ANY start node) that includes a node at turn ≤ the fair
+//     path's 50/50 terminus turn. The intuition: when a guaranteed-WIN line is
+//     available "above or beside" a 50/50, the 50/50 is no longer the best
+//     play and shouldn't be highlighted.
+function evaluateNashPaths() {
+  if (!state.nash.active) return new Set();
+
+  const childrenOf = new Map();
+  state.nodes.forEach(n => {
+    const p = findParentForArrow(n);
+    if (!p) return;
+    if (!childrenOf.has(p.id)) childrenOf.set(p.id, []);
+    childrenOf.get(p.id).push(n);
+  });
+
+  const fiftyFifty = evaluateFiftyFifty();
+  const startNodes = state.nodes.filter(n => n.turn === state.nash.startTurn);
+  const nodeById = new Map();
+  state.nodes.forEach(n => nodeById.set(n.id, n));
+
+  // Walk paths from `from`. Each path stops at the FIRST WIN leaf or 50/50 node
+  // it encounters. Returns { winPaths: [...], fairPaths: [...] } where each
+  // entry is { path: [id, ...], terminusTurn: number }.
+  function collectPaths(from) {
+    const winPaths = [];
+    const fairPaths = [];
+    function walk(node, trail) {
+      const newTrail = [...trail, node.id];
+      // Check 50/50 first — if a start node is itself 50/50, treat its own
+      // node as a non-endpoint and continue walking. For non-start nodes,
+      // 50/50 terminates the path.
+      if (fiftyFifty.has(node.id) && node.id !== from.id) {
+        fairPaths.push({ path: newTrail, terminusTurn: node.turn });
+        return;
+      }
+      if (node.snapshot.winLose === 'win') {
+        winPaths.push({ path: newTrail, terminusTurn: node.turn });
+        return;
+      }
+      if (node.snapshot.winLose === 'lose') return; // dead end
+      const kids = childrenOf.get(node.id) || [];
+      kids.forEach(k => walk(k, newTrail));
+    }
+    walk(from, []);
+    return { winPaths, fairPaths };
+  }
+
+  // First pass: collect all winning paths across all start nodes. We need
+  // this set to apply the cross-suppression to fair paths later.
+  const allWinPaths = [];
+  const perStart = new Map();
+  startNodes.forEach(start => {
+    const res = collectPaths(start);
+    perStart.set(start.id, res);
+    res.winPaths.forEach(p => allWinPaths.push(p));
+  });
+
+  // For each turn T, what's the smallest turn covered by any winning path?
+  // (i.e., does any winning path touch a node at turn ≤ T?)
+  // We can simplify: a fair-path terminus at turn F is suppressed if any
+  // winning path has at least one node at turn ≤ F.
+  // Compute: minimum turn touched across all winning paths.
+  let minWinTurn = Infinity;
+  allWinPaths.forEach(wp => {
+    wp.path.forEach(id => {
+      const n = nodeById.get(id);
+      if (n && n.turn < minWinTurn) minWinTurn = n.turn;
+    });
+  });
+
+  const litUp = new Set();
+  startNodes.forEach(start => {
+    const { winPaths, fairPaths } = perStart.get(start.id) || { winPaths: [], fairPaths: [] };
+    if (winPaths.length > 0) {
+      // Winning paths exist from this start — glow them, drop fair paths.
+      winPaths.forEach(p => p.path.forEach(id => litUp.add(id)));
+    } else {
+      // No winning paths from this start. Glow fair paths, but suppress any
+      // whose 50/50 terminus is at a turn that's already "dominated" by a
+      // winning path elsewhere (at the same turn or earlier).
+      fairPaths.forEach(p => {
+        if (p.terminusTurn >= minWinTurn) return; // dominated — skip
+        p.path.forEach(id => litUp.add(id));
+      });
+    }
+  });
+
+  return litUp;
+}
+
+function createVariationAtCurrentTurn() {
+  const cur = getCurrentNode();
+  if (!cur) return;
+  const turn = cur.turn;
+
+  // At Turn 0: always a top-level peer (new number segment at depth 1).
+  if (turn === 0) {
+    const newVar = generateSiblingVariation(cur.variation);
+    const node = {
+      id: uid(), turn: 0, variation: newVar, branchTurn: 0, parentId: null,
+      snapshot: { turn0: { selfOrder: [], oppOrder: [] }, active: {}, field: {opp:[],self:[]}, back:{opp:[],self:[]}, log: [] }
+    };
+    state.nodes.push(node);
+    state.currentNodeId = node.id;
+    state.turn0Selection = { selfOrder: [], oppOrder: [] };
+    renderAll();
+    return;
+  }
+
+  // Turn 1+: depending on whether we're at this variation's branch turn:
+  //   branch_turn == current turn  -> sibling (same-depth peer)
+  //   branch_turn  < current turn  -> child (one deeper level)
+  const newVar = (cur.branchTurn === turn)
+    ? generateSiblingVariation(cur.variation)
+    : generateChildVariation(cur.variation);
+
+  // Copy the current turn's log entries so the new variation starts with the
+  // SAME actions already applied. The user can then tweak (reorder, delete,
+  // add) to explore a what-if from this exact state. rebuildNode below replays
+  // the cloned raw tokens to regenerate the active state and pendingSwitches.
+  const clonedLog = (cur.snapshot.log || []).map(e => ({
+    type: e.type,
+    raw: e.raw,
+    text: e.text,
+    failed: e.failed
+  }));
+  // Clone field effects too — the new variation starts as a duplicate.
+  const clonedFx = (cur.snapshot.fieldEffects || [])
+    .map(f => ({ name: f.name, turns: f.turns }));
+
+  const newNode = {
+    id: uid(),
+    turn,
+    variation: newVar,
+    branchTurn: turn,
+    parentId: cur.parentId,
+    snapshot: {
+      active:{}, field:{opp:[],self:[]}, back:{opp:[],self:[]},
+      log: clonedLog,
+      fieldEffects: clonedFx
+    }
+  };
+  state.nodes.push(newNode);
+  rebuildNode(newNode);
+  state.currentNodeId = newNode.id;
+  renderAll();
+}
+
+function deepCloneSnapshot(s) {
+  return JSON.parse(JSON.stringify(s));
+}
+
+function deleteNode(id) {
+  const node = state.nodes.find(n => n.id === id);
+  if (!node) return;
+  if (node.turn === 0) {
+    const t0count = state.nodes.filter(n => n.turn === 0).length;
+    if (t0count <= 1) { alert("Turn 0 must have at least one variation."); return; }
+  }
+  // Remove this node + every node whose variation is a prefix-descendant AND
+  // whose turn is >= this node's turn. (Anything before the branch turn is shared
+  // ancestry and must remain.)
+  // Also include same-variation nodes at later turns (continuation of the lineage).
+  const toRemove = new Set();
+  state.nodes.forEach(n => {
+    if (n.id === id) { toRemove.add(n.id); return; }
+    if (n.turn < node.turn) return;
+    // Same variation, turn >= node.turn -> continuation; delete.
+    if (n.variation === node.variation) { toRemove.add(n.id); return; }
+    // Strict descendant variation: starts with node.variation + at least one more segment,
+    // AND that node was branched at turn >= node.turn.
+    if (n.variation.startsWith(node.variation) && n.variation !== node.variation) {
+      // Make sure the next character actually starts a new segment (not e.g. "1" vs "10").
+      const nextSegs = parseVariation(n.variation);
+      const nodeSegs = parseVariation(node.variation);
+      if (nextSegs.length > nodeSegs.length) {
+        // verify the first `nodeSegs.length` segments are identical
+        let ok = true;
+        for (let i = 0; i < nodeSegs.length; i++) {
+          if (nextSegs[i].text !== nodeSegs[i].text) { ok = false; break; }
+        }
+        if (ok) toRemove.add(n.id);
+      }
+    }
+  });
+
+  state.nodes = state.nodes.filter(n => !toRemove.has(n.id));
+  if (toRemove.has(state.currentNodeId)) {
+    state.currentNodeId = state.nodes[0]?.id || null;
+    const cur = getCurrentNode();
+    if (cur && cur.turn === 0) {
+      state.turn0Selection = { 
+        selfOrder: [...(cur.snapshot.turn0?.selfOrder || [])],
+        oppOrder: [...(cur.snapshot.turn0?.oppOrder || [])]
+      };
+    }
+  }
+  renderAll();
+}
+
+/* =================== NODE EDITOR RENDER =================== */
+let nodeScale = 1;
+
+function renderNodeEditor() {
+  // Keep the Nash button's "off / from turn: N" label in sync with state.
+  updateNashButton();
+  const canvas = document.getElementById('nodeCanvas');
+  const svg = document.getElementById('nodeSvg');
+  [...canvas.querySelectorAll('.node')].forEach(n => n.remove());
+  svg.innerHTML = '';
+
+  if (state.nodes.length === 0) return;
+
+  const turns = [...new Set(state.nodes.map(n => n.turn))].sort((a,b)=>a-b);
+  const nodeWidth = 130;
+  const nodeHeight = 50;
+  const colGap = 30;
+  const rowGap = 50;
+  const rowHeight = nodeHeight + rowGap;
+  const padding = 30;
+
+  // Variation column ordering: depth-first traversal of the variation tree so that
+  // parent variations sit to the left of their descendants. Sort siblings by
+  // segment value at their depth.
+  //
+  //   1   1a  1a1  1b   1b1   2   2a   ...
+  //
+  // Build tree, then DFS.
+  const allVariations = [...new Set(state.nodes.map(n => n.variation))];
+  // Sort all variations by full segment chain so DFS produces stable order.
+  const compareVariations = (a, b) => {
+    const sa = parseVariation(a), sb = parseVariation(b);
+    const minL = Math.min(sa.length, sb.length);
+    for (let i = 0; i < minL; i++) {
+      if (sa[i].kind !== sb[i].kind) return sa[i].kind === 'num' ? -1 : 1;
+      if (sa[i].value !== sb[i].value) return sa[i].value - sb[i].value;
+    }
+    return sa.length - sb.length;
+  };
+  allVariations.sort(compareVariations);
+  const varCol = {};
+  allVariations.forEach((v, i) => { varCol[v] = i; });
+
+  const positions = {};
+  let maxX = 0;
+  turns.forEach((t, rowIdx) => {
+    const inTurn = state.nodes.filter(n => n.turn === t);
+    inTurn.forEach(n => {
+      const x = padding + varCol[n.variation] * (nodeWidth + colGap);
+      const y = padding + rowIdx * rowHeight;
+      positions[n.id] = { x, y };
+      maxX = Math.max(maxX, x + nodeWidth);
+    });
+  });
+
+  // Terminal nodes (WINNING / LOSING): rendered one row below their parent
+  // whenever that parent has winLose set. They are non-interactive and aren't
+  // part of state.nodes — they only exist for visualization.
+  const terminalRowFor = (parentTurn) => {
+    const parentIdx = turns.indexOf(parentTurn);
+    return padding + (parentIdx + 1) * rowHeight;
+  };
+  const terminals = [];
+  state.nodes.forEach(n => {
+    if (!n.snapshot.winLose) return;
+    const px = positions[n.id];
+    if (!px) return;
+    terminals.push({
+      parent: n,
+      x: px.x,
+      y: terminalRowFor(n.turn),
+      kind: n.snapshot.winLose
+    });
+  });
+
+  let maxY = padding + turns.length * rowHeight;
+  terminals.forEach(t => { maxY = Math.max(maxY, t.y + nodeHeight + padding); });
+  canvas.style.width = (maxX + padding) + 'px';
+  canvas.style.height = maxY + 'px';
+  svg.setAttribute('width', maxX + padding);
+  svg.setAttribute('height', maxY);
+
+  // Arrows: each node connects up to its variation-ancestry parent at turn-1.
+  // For same-variation continuation: vertical arrow.
+  // For branch start (variation differs from parent's variation): diagonal arrow
+  // from parent column to child column.
+  state.nodes.forEach(n => {
+    const parentNode = findParentForArrow(n);
+    if (!parentNode) return;
+    const p = positions[parentNode.id];
+    const c = positions[n.id];
+    if (!p || !c) return;
+    const x1 = p.x + nodeWidth/2;
+    const y1 = p.y + nodeHeight;
+    const x2 = c.x + nodeWidth/2;
+    const y2 = c.y;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let d;
+    if (Math.abs(x1 - x2) < 1) {
+      d = `M ${x1} ${y1} L ${x2} ${y2}`;
+    } else {
+      // L-shape from parent center down, then across, then down into child
+      const midY = y1 + (y2 - y1) / 2;
+      d = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
+    }
+    line.setAttribute('d', d);
+    line.setAttribute('stroke', 'var(--ink-mute)');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('fill', 'none');
+    line.setAttribute('marker-end', 'url(#arrow)');
+    svg.appendChild(line);
+  });
+
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = `<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="currentColor" style="fill:var(--ink-mute)"/></marker>`;
+  svg.appendChild(defs);
+
+  // Draw nodes
+  const fiftyFifty = evaluateFiftyFifty();
+  const nashLit = evaluateNashPaths();
+  state.nodes.forEach(n => {
+    const pos = positions[n.id];
+    const div = document.createElement('div');
+    let cls = 'node';
+    if (n.id === state.currentNodeId) cls += ' active';
+    if (nashLit.has(n.id)) cls += ' nash-glow';
+    div.className = cls;
+    div.style.left = pos.x + 'px';
+    div.style.top = pos.y + 'px';
+    div.style.width = nodeWidth + 'px';
+    // Display suffix is purely visual — n.variation itself is untouched, and
+    // export/import are unaffected.
+    const labelSuffix = fiftyFifty.has(n.id) ? ' <span class="ff-tag">(50/50)</span>' : '';
+    div.innerHTML = `<div class="node-turn">Turn ${n.turn}</div><div class="node-var">${escapeHtml(n.variation)}${labelSuffix}</div>`;
+    div.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showNodeContextMenu(e, n.id);
+    });
+    attachNodeLogTooltip(div, n);
+    canvas.appendChild(div);
+  });
+
+  // Draw terminal (WINNING / LOSING) nodes with arrows from their parents.
+  // These nodes are purely visual — no click handler, no context menu.
+  terminals.forEach(t => {
+    const parentPos = positions[t.parent.id];
+    if (!parentPos) return;
+    // Arrow from parent center-bottom to terminal center-top
+    const x1 = parentPos.x + nodeWidth/2;
+    const y1 = parentPos.y + nodeHeight;
+    const x2 = t.x + nodeWidth/2;
+    const y2 = t.y;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+    line.setAttribute('stroke', t.kind === 'win' ? 'var(--good)' : 'var(--bad)');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-dasharray', '4 3');
+    line.setAttribute('fill', 'none');
+    svg.appendChild(line);
+
+    const div = document.createElement('div');
+    div.className = 'node terminal ' + t.kind;
+    div.style.left = t.x + 'px';
+    div.style.top = t.y + 'px';
+    div.style.width = nodeWidth + 'px';
+    const label = t.kind === 'win' ? 'WINNING' : 'LOSING';
+    div.innerHTML = `<div class="node-turn">Result</div><div class="node-var">${label}</div>`;
+    // Intentionally NO click handler — terminal nodes can't be selected or deleted.
+    canvas.appendChild(div);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showNodeContextMenu(evt, nodeId) {
+  closeAllContextMenus();
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  if (isMobile()) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'mobile-ctx-backdrop';
+    backdrop.addEventListener('click', closeAllContextMenus);
+    document.body.appendChild(backdrop);
+    menu.style.left = '50%';
+    menu.style.top = '50%';
+    menu.style.transform = 'translate(-50%, -50%)';
+    menu.style.width = 'min(86vw, 280px)';
+  } else {
+    menu.style.left = evt.clientX + 'px';
+    menu.style.top = evt.clientY + 'px';
+  }
+  const node = state.nodes.find(n => n.id === nodeId);
+  menu.innerHTML = `
+    <div class="item" data-act="goto">Go To</div>
+    <div class="item" data-act="delete">Delete</div>
+  `;
+  document.body.appendChild(menu);
+  menu.querySelectorAll('.item').forEach(it => {
+    it.addEventListener('click', () => {
+      const act = it.dataset.act;
+      if (act === 'goto') goToNode(nodeId);
+      else if (act === 'delete') deleteNode(nodeId);
+      closeAllContextMenus();
+    });
+  });
+}
+
+/* =================== TURN 0 SCREEN =================== */
+function renderBattle() {
+  const node = getCurrentNode();
+  if (!node) return;
+  const battle = document.getElementById('battleContent');
+  document.getElementById('battleTurnInfo').textContent = `Turn ${node.turn}`;
+  document.getElementById('battleStatusTag').textContent = `TURN ${node.turn}`;
+  document.getElementById('logVariantTag').textContent = `T${node.turn} · ${node.variation}`;
+
+  if (node.turn === 0) {
+    renderTurn0Screen(battle);
+  } else {
+    renderTurnNScreen(battle);
+  }
+}
+
+function renderTurn0Screen(container) {
+  const node = getCurrentNode();
+  const sel = state.turn0Selection;
+  const opp = SLOTS_OPP.filter(s => pokemonReady(s));
+  const self = SLOTS_SELF.filter(s => pokemonReady(s));
+
+  container.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'turn0-screen';
+
+  const grid = document.createElement('div');
+  grid.className = 'turn0-grid';
+
+  const selfCol = document.createElement('div');
+  selfCol.className = 'turn0-side';
+  selfCol.innerHTML = '<h3>Self · 1-6</h3>';
+  self.forEach(s => {
+    const p = state.pokemon[s];
+    const orderIdx = sel.selfOrder.indexOf(s);
+    const btn = document.createElement('button');
+    btn.className = 'turn0-pokemon-btn' + (orderIdx >= 0 ? ' selected' : '');
+    btn.innerHTML = `
+      <img src="${spriteUrl(p.name)}" onerror="this.style.opacity=0.2" alt="${p.name}">
+      <span class="slot-letter">${s}</span>
+      <span>${p.name}</span>
+      ${orderIdx >= 0 ? `<span class="order-badge">${orderIdx+1}</span>` : ''}`;
+    btn.addEventListener('click', () => toggleTurn0Pick(s, 'self'));
+    selfCol.appendChild(btn);
+  });
+
+  const center = document.createElement('div');
+  center.className = 'turn0-center';
+  const startBtn = document.createElement('button');
+  startBtn.className = 'turn0-start';
+  startBtn.textContent = 'Start';
+  startBtn.disabled = !(sel.selfOrder.length > 0 && sel.oppOrder.length > 0);
+  startBtn.addEventListener('click', commitTurn0);
+  center.appendChild(startBtn);
+
+  const fieldSize = document.createElement('div');
+  fieldSize.className = 'field-size-row';
+  fieldSize.innerHTML = `<label>Pokémon per side</label>`;
+  const sel2 = document.createElement('select');
+  [1,2,3].forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    if (n === state.fieldSize) o.selected = true;
+    sel2.appendChild(o);
+  });
+  sel2.addEventListener('change', () => {
+    state.fieldSize = parseInt(sel2.value);
+    // Field size determines the field/back split — rebuild everything downstream.
+    rebuildAllNodes();
+    renderBattle();
+    renderNodeEditor();
+    renderLog();
+  });
+  fieldSize.appendChild(sel2);
+  center.appendChild(fieldSize);
+
+  const oppCol = document.createElement('div');
+  oppCol.className = 'turn0-side';
+  oppCol.innerHTML = '<h3>Opponent · A-F</h3>';
+  opp.forEach(s => {
+    const p = state.pokemon[s];
+    const orderIdx = sel.oppOrder.indexOf(s);
+    const btn = document.createElement('button');
+    btn.className = 'turn0-pokemon-btn' + (orderIdx >= 0 ? ' selected' : '');
+    btn.innerHTML = `
+      <img src="${spriteUrl(p.name)}" onerror="this.style.opacity=0.2" alt="${p.name}">
+      <span class="slot-letter">${s}</span>
+      <span>${p.name}</span>
+      ${orderIdx >= 0 ? `<span class="order-badge">${orderIdx+1}</span>` : ''}`;
+    btn.addEventListener('click', () => toggleTurn0Pick(s, 'opp'));
+    oppCol.appendChild(btn);
+  });
+
+  grid.appendChild(selfCol);
+  grid.appendChild(center);
+  grid.appendChild(oppCol);
+  wrap.appendChild(grid);
+  container.appendChild(wrap);
+}
+
+function toggleTurn0Pick(slot, side) {
+  const sel = state.turn0Selection;
+  const arr = side === 'self' ? sel.selfOrder : sel.oppOrder;
+  const idx = arr.indexOf(slot);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(slot);
+  // save into current node snapshot
+  const node = getCurrentNode();
+  if (node && node.turn === 0) {
+    node.snapshot.turn0 = { selfOrder: [...sel.selfOrder], oppOrder: [...sel.oppOrder] };
+    // The turn-0 picks determine which pokemon are on field/back for downstream turns,
+    // so any change to selection must rebuild every dependent node.
+    propagateFrom(node);
+  }
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+function commitTurn0() {
+  const node = getCurrentNode();
+  if (!node || node.turn !== 0) return;
+  const sel = state.turn0Selection;
+  if (sel.selfOrder.length === 0 || sel.oppOrder.length === 0) return;
+
+  // If a Turn 1 node with the same variation name already exists, just jump to it.
+  const existing = state.nodes.find(n => n.turn === 1 && n.variation === node.variation);
+  if (existing) {
+    state.currentNodeId = existing.id;
+    renderAll();
+    return;
+  }
+
+  // Create a placeholder Turn 1 node and let the unified rebuild pipeline derive its
+  // start state from the current Turn 0 selection. Keeps behavior consistent with
+  // how propagation rebuilds later turns.
+  const newNode = {
+    id: uid(),
+    turn: 1,
+    variation: node.variation,
+    branchTurn: node.branchTurn,
+    parentId: node.id,
+    snapshot: { active:{}, field:{opp:[],self:[]}, back:{opp:[],self:[]}, log:[] }
+  };
+  state.nodes.push(newNode);
+  rebuildNode(newNode);
+  state.currentNodeId = newNode.id;
+  renderAll();
+}
+
+/* =================== TURN N SCREEN =================== */
+function renderTurnNScreen(container) {
+  const node = getCurrentNode();
+  const snap = node.snapshot;
+  const terminal = snap.winLose; // 'win' | 'lose' | undefined
+  container.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'battle-field';
+
+  // back rows: top = opp back, bottom = self back
+  const oppBack = document.createElement('div');
+  oppBack.className = 'field-row-back';
+  snap.back.opp.forEach(s => {
+    const p = state.pokemon[s];
+    const img = document.createElement('img');
+    img.src = spriteUrl(p.name);
+    img.alt = `${s}: ${p.name}`;
+    img.dataset.slot = s;
+    img.onerror = () => img.style.opacity = 0.2;
+    if (snap.active[s]?.hp === '0%') img.style.filter = 'grayscale(1) brightness(0.7)';
+    attachHoverTooltip(img, s);
+    oppBack.appendChild(img);
+  });
+  wrap.appendChild(oppBack);
+
+  // active area
+  const active = document.createElement('div');
+  active.className = 'field-row-active';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'turn-nav prev';
+  prevBtn.innerHTML = '‹';
+  prevBtn.addEventListener('click', goToPrevTurn);
+  active.appendChild(prevBtn);
+
+  // Next-turn button is hidden whenever the current turn has a terminal
+  // outcome (winning/losing) — the run is over for this variation.
+  if (!terminal) {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'turn-nav next';
+    nextBtn.innerHTML = '›';
+    nextBtn.addEventListener('click', goToNextTurn);
+    active.appendChild(nextBtn);
+  }
+
+  const oppActive = document.createElement('div');
+  oppActive.className = 'opp-active';
+  snap.field.opp.forEach(s => oppActive.appendChild(buildFieldMon(s)));
+  active.appendChild(oppActive);
+
+  const selfActive = document.createElement('div');
+  selfActive.className = 'self-active';
+  snap.field.self.forEach(s => selfActive.appendChild(buildFieldMon(s)));
+  active.appendChild(selfActive);
+
+  wrap.appendChild(active);
+
+  const selfBack = document.createElement('div');
+  selfBack.className = 'field-row-back';
+  snap.back.self.forEach(s => {
+    const p = state.pokemon[s];
+    const img = document.createElement('img');
+    img.src = spriteUrl(p.name);
+    img.alt = `${s}: ${p.name}`;
+    img.onerror = () => img.style.opacity = 0.2;
+    if (snap.active[s]?.hp === '0%') img.style.filter = 'grayscale(1) brightness(0.7)';
+    attachHoverTooltip(img, s);
+    selfBack.appendChild(img);
+  });
+  wrap.appendChild(selfBack);
+
+  // Field effects display + opener button — bottom-right corner of the battle
+  // pane. Active effects are stacked above the button as small badges.
+  const fxBar = document.createElement('div');
+  fxBar.className = 'field-fx-bar';
+  const fxList = document.createElement('div');
+  fxList.className = 'field-fx-list';
+  (snap.fieldEffects || []).forEach(f => {
+    const badge = document.createElement('div');
+    badge.className = 'field-fx-badge';
+    badge.textContent = `${f.name}: ${f.turns}`;
+    fxList.appendChild(badge);
+  });
+  const fxBtn = document.createElement('button');
+  fxBtn.className = 'field-fx-btn';
+  fxBtn.textContent = 'Field...';
+  fxBtn.addEventListener('click', openFieldEffectsModal);
+  fxBar.appendChild(fxList);
+  fxBar.appendChild(fxBtn);
+  wrap.appendChild(fxBar);
+
+  // Winning / Losing toggle bar — only shown when this is a leaf node (no
+  // visual children). A node that already has descendants can't be marked as
+  // a terminal outcome since the run continued past it.
+  const hasChildren = state.nodes.some(n => {
+    const p = findParentForArrow(n);
+    return p && p.id === node.id;
+  });
+  if (!hasChildren) {
+    const bar = document.createElement('div');
+    bar.className = 'winlose-bar';
+    const winBtn = document.createElement('button');
+    winBtn.className = 'winlose-btn win' + (terminal === 'win' ? ' active' : '');
+    winBtn.textContent = 'Winning';
+    winBtn.addEventListener('click', () => toggleWinLose('win'));
+    const loseBtn = document.createElement('button');
+    loseBtn.className = 'winlose-btn lose' + (terminal === 'lose' ? ' active' : '');
+    loseBtn.textContent = 'Losing';
+    loseBtn.addEventListener('click', () => toggleWinLose('lose'));
+    bar.appendChild(winBtn);
+    bar.appendChild(loseBtn);
+    wrap.appendChild(bar);
+  }
+
+  container.appendChild(wrap);
+}
+
+function toggleWinLose(which) {
+  const node = getCurrentNode();
+  if (!node || node.turn === 0) return;
+  if (node.snapshot.winLose === which) {
+    delete node.snapshot.winLose;
+  } else {
+    node.snapshot.winLose = which;
+  }
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+/* =================== FIELD EFFECTS MODAL ===================
+   Manages field effects (e.g., Tailwind, Trick Room, Sandstorm) that persist
+   across turns with a timer. Effects added this turn can be edited/deleted;
+   effects inherited from previous turns are shown but locked.
+*/
+function openFieldEffectsModal() {
+  const node = getCurrentNode();
+  if (!node || node.turn === 0) return;
+  if (!node.snapshot.fieldEffects) node.snapshot.fieldEffects = [];
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Field Effects</h2>
+    <div class="field-fx-modal-list" id="fxModalList"></div>
+    <div class="field-fx-modal-add" id="fxModalAdd" style="display:none;">
+      <label style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;margin-top:8px;">Field effect</label>
+      <input type="text" id="fxNameInput" placeholder="e.g. Tailwind">
+      <label style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;margin-top:8px;">Turns</label>
+      <input type="text" id="fxTurnsInput" placeholder="4" inputmode="numeric" pattern="[0-9]*">
+      <div class="modal-actions" style="margin-top:10px;">
+        <button id="fxAddCancel">Cancel</button>
+        <button class="primary" id="fxAddOk">OK</button>
+      </div>
+    </div>
+    <div class="modal-actions" id="fxMainActions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Close</button>
+      <button class="primary" id="fxOpenAdd">Add field</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+
+  function refresh() {
+    const list = backdrop.querySelector('#fxModalList');
+    const fx = node.snapshot.fieldEffects;
+    if (fx.length === 0) {
+      list.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--ink-mute);font-style:italic;padding:8px 0;">No active field effects.</div>`;
+      return;
+    }
+    list.innerHTML = '';
+    fx.forEach((f, idx) => {
+      const row = document.createElement('div');
+      row.className = 'field-fx-modal-row';
+      row.innerHTML = `<span class="fx-name">${escapeHtml(f.name)}</span><span class="fx-turns">${f.turns} turn${f.turns === 1 ? '' : 's'}</span>`;
+
+      // Edit button: replaces the turns display with an inline numeric input,
+      // plus ✓ to confirm and ✕ to cancel. Out of edit-mode, the delete and
+      // edit buttons reappear.
+      const edit = document.createElement('button');
+      edit.className = 'fx-edit';
+      edit.textContent = '✎';
+      edit.title = 'Edit turns';
+      edit.addEventListener('click', () => enterEditMode(row, f, idx));
+      row.appendChild(edit);
+
+      const del = document.createElement('button');
+      del.className = 'fx-del';
+      del.textContent = '×';
+      del.title = 'Remove';
+      del.addEventListener('click', () => {
+        fx.splice(idx, 1);
+        renderBattle();
+        renderNodeEditor();
+        renderLog();
+        refresh();
+      });
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function enterEditMode(row, effect, idx) {
+    // Swap the turns span for an input + confirm/cancel pair, hide normal buttons.
+    const turnsSpan = row.querySelector('.fx-turns');
+    const editBtn = row.querySelector('.fx-edit');
+    const delBtn = row.querySelector('.fx-del');
+    editBtn.style.display = 'none';
+    delBtn.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'fx-edit-input';
+    input.value = String(effect.turns);
+    input.inputMode = 'numeric';
+    input.pattern = '[0-9]*';
+    input.addEventListener('input', () => { input.value = input.value.replace(/[^0-9]/g, ''); });
+    turnsSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const ok = document.createElement('button');
+    ok.className = 'fx-edit-ok';
+    ok.textContent = '✓';
+    ok.title = 'Confirm';
+    const cancel = document.createElement('button');
+    cancel.className = 'fx-edit-cancel';
+    cancel.textContent = '✕';
+    cancel.title = 'Cancel';
+    row.appendChild(ok);
+    row.appendChild(cancel);
+
+    function commit() {
+      const v = parseInt(input.value, 10);
+      if (isNaN(v) || v < 1) { alert('Turns must be a positive integer.'); input.focus(); return; }
+      effect.turns = v;
+      renderBattle();
+      renderNodeEditor();
+      renderLog();
+      refresh();
+    }
+    function abort() { refresh(); }
+    ok.addEventListener('click', commit);
+    cancel.addEventListener('click', abort);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') commit();
+      else if (e.key === 'Escape') abort();
+    });
+  }
+  refresh();
+
+  function showAddForm(show) {
+    backdrop.querySelector('#fxModalAdd').style.display = show ? 'block' : 'none';
+    backdrop.querySelector('#fxMainActions').style.display = show ? 'none' : 'flex';
+    if (show) {
+      const nameInp = backdrop.querySelector('#fxNameInput');
+      nameInp.value = '';
+      backdrop.querySelector('#fxTurnsInput').value = '';
+      nameInp.focus();
+    }
+  }
+  backdrop.querySelector('#fxOpenAdd').addEventListener('click', () => showAddForm(true));
+  backdrop.querySelector('#fxAddCancel').addEventListener('click', () => showAddForm(false));
+
+  // Restrict the turns input to digits only.
+  const turnsInp = backdrop.querySelector('#fxTurnsInput');
+  turnsInp.addEventListener('input', () => {
+    turnsInp.value = turnsInp.value.replace(/[^0-9]/g, '');
+  });
+
+  function submitAdd() {
+    const name = backdrop.querySelector('#fxNameInput').value.trim();
+    const turnsRaw = turnsInp.value.trim();
+    if (!name) { alert('Enter a field effect name.'); return; }
+    if (!turnsRaw) { alert('Enter how many turns the effect lasts.'); return; }
+    const turns = parseInt(turnsRaw, 10);
+    if (isNaN(turns) || turns < 1) { alert('Turns must be a positive integer.'); return; }
+    // Check for duplicate names (case-insensitive)
+    const dup = node.snapshot.fieldEffects.some(f => f.name.toLowerCase() === name.toLowerCase());
+    if (dup) { alert(`A field effect named "${name}" already exists on this turn.`); return; }
+    node.snapshot.fieldEffects.push({ name, turns });
+    renderBattle();
+    renderNodeEditor();
+    renderLog();
+    showAddForm(false);
+    refresh();
+  }
+  backdrop.querySelector('#fxAddOk').addEventListener('click', submitAdd);
+  backdrop.querySelector('#fxNameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') turnsInp.focus();
+    else if (e.key === 'Escape') showAddForm(false);
+  });
+  turnsInp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitAdd();
+    else if (e.key === 'Escape') showAddForm(false);
+  });
+}
+
+/* =================== FLIP SIDES ===================
+   Swap the entire "self" side with the "opponent" side:
+     1↔A, 2↔B, 3↔C, 4↔D, 5↔E, 6↔F
+   This affects team data, every node's snapshot (active, field, back, log raw
+   tokens, pendingSwitches, turn0 selection), the current turn 0 selection, and
+   winLose markers (since Winning from the self perspective becomes Losing from
+   the opponent's perspective and vice versa).
+*/
+function flipSides() {
+  // Slot translation table both directions.
+  const map = { '1':'A', '2':'B', '3':'C', '4':'D', '5':'E', '6':'F',
+                'A':'1', 'B':'2', 'C':'3', 'D':'4', 'E':'5', 'F':'6' };
+  const xlate = (s) => map[s] || s;
+  // Translate a string that may contain slot characters (used for log raw tokens).
+  // Tokens look like "<slot> <action> [args]" where the slot is the first whitespace-
+  // delimited piece; trailing target lists are also slot-letter strings.
+  function xlateToken(tok) {
+    const parts = tok.split(/\s+/);
+    if (parts.length === 0) return tok;
+    // First token is the actor slot.
+    if (parts[0].length === 1 && map[parts[0]]) parts[0] = xlate(parts[0]);
+    // If action is "switch", the third token is the target slot.
+    if (parts[1] === 'switch' && parts[2]) {
+      if (parts[2].length === 1 && map[parts[2]]) parts[2] = xlate(parts[2]);
+    }
+    // Otherwise, the last token may be a target list (e.g. "13B") — translate
+    // every character that is a known slot character.
+    const last = parts[parts.length - 1];
+    if (parts[1] !== 'switch' && parts[1] !== 'health' && /^[A-F1-6]+$/.test(last)) {
+      parts[parts.length - 1] = last.split('').map(xlate).join('');
+    }
+    return parts.join(' ');
+  }
+
+  // 1. Swap team data
+  const newPokemon = {};
+  Object.keys(state.pokemon).forEach(slot => {
+    newPokemon[xlate(slot)] = state.pokemon[slot];
+  });
+  state.pokemon = newPokemon;
+
+  // 2. Walk every node and flip its snapshot in place.
+  state.nodes.forEach(n => {
+    const snap = n.snapshot;
+    // active: keyed by slot
+    if (snap.active) {
+      const newActive = {};
+      Object.keys(snap.active).forEach(s => { newActive[xlate(s)] = snap.active[s]; });
+      snap.active = newActive;
+    }
+    // field/back: opp ↔ self, AND each slot letter translates to its counterpart.
+    // Because both side-swap and letter-swap happen together, the end result is:
+    // the slots that USED to be opp (A-F) now sit in self (since A → 1, etc.),
+    // and self slots (1-6) now sit in opp.
+    if (snap.field) {
+      const newField = {
+        opp: (snap.field.self || []).map(xlate),
+        self: (snap.field.opp || []).map(xlate),
+      };
+      snap.field = newField;
+    }
+    if (snap.back) {
+      const newBack = {
+        opp: (snap.back.self || []).map(xlate),
+        self: (snap.back.opp || []).map(xlate),
+      };
+      snap.back = newBack;
+    }
+    // Turn 0 selection (only present on Turn 0 nodes)
+    if (snap.turn0) {
+      const newT0 = {
+        selfOrder: (snap.turn0.oppOrder || []).map(xlate),
+        oppOrder: (snap.turn0.selfOrder || []).map(xlate),
+      };
+      snap.turn0 = newT0;
+    }
+    // Pending switches
+    if (snap.pendingSwitches) {
+      snap.pendingSwitches = snap.pendingSwitches.map(sw => ({
+        outSlot: xlate(sw.outSlot),
+        inSlot: xlate(sw.inSlot)
+      }));
+    }
+    // Log entries: translate raw tokens; text will regenerate on rebuild.
+    if (Array.isArray(snap.log)) {
+      snap.log.forEach(entry => {
+        if (entry.raw) entry.raw = xlateToken(entry.raw);
+      });
+    }
+    // Win/Lose flips perspective: a win for self becomes a loss when sides swap.
+    if (snap.winLose === 'win') snap.winLose = 'lose';
+    else if (snap.winLose === 'lose') snap.winLose = 'win';
+  });
+
+  // 3. Current Turn 0 in-progress selection
+  const sel = state.turn0Selection;
+  state.turn0Selection = {
+    selfOrder: (sel.oppOrder || []).map(xlate),
+    oppOrder: (sel.selfOrder || []).map(xlate)
+  };
+
+  // 4. Rebuild ALL nodes so the log text rewrites with new names and the active
+  // state propagates correctly through the new lineage.
+  rebuildAllNodes();
+  renderAll();
+}
+
+function buildFieldMon(slot) {
+  const node = getCurrentNode();
+  const snap = node.snapshot;
+  const p = state.pokemon[slot];
+  const monState = snap.active[slot] || { hp: '100%' };
+  const div = document.createElement('div');
+  div.className = 'field-mon' + (monState.hp === '0%' ? ' fainted' : '');
+  div.innerHTML = `
+    <img src="${spriteUrl(p.name)}" alt="${p.name}" onerror="this.style.opacity=0.2">
+    <span class="label">${slot}</span>
+    <span class="hp-label">${monState.hp}</span>`;
+  div.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // If a long-press tooltip just fired on this element, suppress the
+    // synthesized click so the context menu doesn't fight the tooltip.
+    if (div._suppressNextClick) { div._suppressNextClick = false; return; }
+    showFieldMonContextMenu(e, slot);
+  });
+  attachHoverTooltip(div, slot);
+  return div;
+}
+
+function attachNodeLogTooltip(el, node) {
+  // Hover-only tooltip that shows the battle log for a flowchart node. Skipped
+  // on touch devices since hovering doesn't apply — the user can tap a node
+  // and use Go To to see the same info in the bottom log panel.
+  let tt = null;
+  function buildHTML() {
+    if (node.turn === 0) {
+      const sel = node.snapshot.turn0 || { selfOrder:[], oppOrder:[] };
+      return `<div class="tt-title">Turn 0 · ${escapeHtml(node.variation)}</div>
+        <div>Self chose: ${sel.selfOrder.join(', ') || '—'}</div>
+        <div>Opp chose: ${sel.oppOrder.join(', ') || '—'}</div>`;
+    }
+    const log = node.snapshot.log || [];
+    const lines = log.map((e, i) => {
+      const num = String(i + 1).padStart(2, '0');
+      const text = escapeHtml(e.text);
+      return e.failed
+        ? `<div><span style="color:var(--bad);opacity:.7;">${num}</span> <span style="text-decoration:line-through;color:var(--ink-mute);opacity:.7;">${text}</span></div>`
+        : `<div><span style="color:var(--ink-mute);">${num}</span> ${text}</div>`;
+    });
+    const fields = (node.snapshot.fieldEffects || []);
+    let fieldStr = '';
+    if (fields.length > 0) {
+      fieldStr = `<div style="margin-top:6px;font-style:italic;color:var(--accent-3);">${fields.map(f => escapeHtml(f.name) + ': ' + f.turns).join(', ')}</div>`;
+    }
+    let terminal = '';
+    if (node.snapshot.winLose === 'win')  terminal = `<div style="margin-top:6px;color:var(--good);font-weight:700;">★ Winning</div>`;
+    if (node.snapshot.winLose === 'lose') terminal = `<div style="margin-top:6px;color:var(--bad);font-weight:700;">✖ Losing</div>`;
+    const body = lines.length > 0 ? lines.join('') : `<div style="color:var(--ink-mute);font-style:italic;">No actions logged.</div>`;
+    return `<div class="tt-title">Turn ${node.turn} · ${escapeHtml(node.variation)}</div>${body}${fieldStr}${terminal}`;
+  }
+  el.addEventListener('mouseenter', (e) => {
+    if (isMobile()) return;
+    tt = document.createElement('div');
+    tt.className = 'mon-tooltip node-log-tooltip';
+    tt.innerHTML = buildHTML();
+    document.body.appendChild(tt);
+    moveTip(e);
+  });
+  el.addEventListener('mousemove', moveTip);
+  el.addEventListener('mouseleave', () => { if (tt) { tt.remove(); tt = null; } });
+  function moveTip(e) {
+    if (!tt) return;
+    let x = e.clientX + 14;
+    let y = e.clientY + 14;
+    const w = tt.offsetWidth, h = tt.offsetHeight;
+    if (x + w > innerWidth - 10) x = e.clientX - w - 14;
+    if (y + h > innerHeight - 10) y = e.clientY - h - 14;
+    tt.style.left = x + 'px';
+    tt.style.top = y + 'px';
+  }
+}
+
+function attachHoverTooltip(el, slot) {
+  let tt = null;
+  function buildTipHTML() {
+    const p = state.pokemon[slot];
+    const node = getCurrentNode();
+    const hp = node?.snapshot?.active?.[slot]?.hp || '100%';
+    return `<div class="tt-title">${escapeHtml(slot)}: ${escapeHtml(p.name||'<empty>')}${p.gender?' ('+escapeHtml(p.gender)+')':''}${p.item?' @ '+escapeHtml(p.item):''} (${escapeHtml(hp)})</div>
+      ${p.ability?'Ability: '+escapeHtml(p.ability)+'\n':''}
+      ${p.shiny?'Shiny: '+escapeHtml(p.shiny)+'\n':''}
+      ${p.tera?'Tera: '+escapeHtml(p.tera)+'\n':''}
+      ${p.evs?'EVs: '+escapeHtml(p.evs)+'\n':''}
+      ${p.nature?'Nature: '+escapeHtml(p.nature)+'\n':''}
+      ${p.ivs?'IVs: '+escapeHtml(p.ivs)+'\n':''}
+      ${p.moves.filter(Boolean).map(m=>'- '+escapeHtml(m)).join('\n')}`;
+  }
+
+  // Desktop hover behavior
+  el.addEventListener('mouseenter', (e) => {
+    if (isMobile()) return; // mobile uses long-press instead
+    tt = document.createElement('div');
+    tt.className = 'mon-tooltip';
+    tt.innerHTML = buildTipHTML();
+    document.body.appendChild(tt);
+    moveTip(e);
+  });
+  el.addEventListener('mousemove', moveTip);
+  el.addEventListener('mouseleave', () => { if (tt) { tt.remove(); tt = null; } });
+  function moveTip(e) {
+    if (!tt) return;
+    let x = e.clientX + 14;
+    let y = e.clientY + 14;
+    const w = tt.offsetWidth, h = tt.offsetHeight;
+    if (x + w > innerWidth - 10) x = e.clientX - w - 14;
+    if (y + h > innerHeight - 10) y = e.clientY - h - 14;
+    tt.style.left = x + 'px';
+    tt.style.top = y + 'px';
+  }
+
+  // Touch: long-press to show the tooltip as a bottom sheet.
+  let pressTimer = null;
+  let pressStartX = 0, pressStartY = 0;
+  let pressed = false;
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    pressed = true;
+    pressStartX = e.touches[0].clientX;
+    pressStartY = e.touches[0].clientY;
+    pressTimer = setTimeout(() => {
+      if (!pressed) return;
+      dismissTouchTooltip();
+      const sheet = document.createElement('div');
+      sheet.className = 'mon-tooltip mobile';
+      sheet.innerHTML = buildTipHTML();
+      document.body.appendChild(sheet);
+      activeTouchTooltip = sheet;
+      // suppress the upcoming click that would trigger the context menu
+      el._suppressNextClick = true;
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch(e) {}
+    }, 450);
+  }, { passive: true });
+  el.addEventListener('touchmove', (e) => {
+    if (!pressed) return;
+    const dx = Math.abs(e.touches[0].clientX - pressStartX);
+    const dy = Math.abs(e.touches[0].clientY - pressStartY);
+    if (dx > 10 || dy > 10) {
+      pressed = false;
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    }
+  });
+  el.addEventListener('touchend', () => {
+    pressed = false;
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  });
+  el.addEventListener('touchcancel', () => {
+    pressed = false;
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  });
+}
+
+/* =================== FIELD CONTEXT MENU =================== */
+function showFieldMonContextMenu(evt, slot) {
+  closeAllContextMenus();
+  // No actions allowed once the turn is marked Winning or Losing.
+  const curNode = getCurrentNode();
+  if (curNode && curNode.snapshot.winLose) return;
+  const p = state.pokemon[slot];
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  if (isMobile()) {
+    // Center on screen; appears above the log via z-index. Add a dimmed backdrop
+    // so tapping outside dismisses.
+    const backdrop = document.createElement('div');
+    backdrop.className = 'mobile-ctx-backdrop';
+    backdrop.addEventListener('click', closeAllContextMenus);
+    document.body.appendChild(backdrop);
+    menu.style.left = '50%';
+    menu.style.top = '50%';
+    menu.style.transform = 'translate(-50%, -50%)';
+    menu.style.maxHeight = '80vh';
+    menu.style.overflowY = 'auto';
+    menu.style.width = 'min(86vw, 320px)';
+  } else {
+    menu.style.left = evt.clientX + 'px';
+    menu.style.top = evt.clientY + 'px';
+  }
+
+  const menuItems = [];
+  for (let i = 0; i < 4; i++) {
+    if (p.moves[i]) menuItems.push({ label: 'Move ' + (i+1) + ': ' + p.moves[i], act: 'move', idx: i, moveName: p.moves[i] });
+  }
+  menuItems.push({ label: 'Switch', act: 'switch', hasSub: true });
+  menuItems.push({ label: 'Health', act: 'health' });
+  menuItems.push({ label: 'Dynamax', act: 'dynamax' });
+  menuItems.push({ label: 'Mega Evolve', act: 'mega' });
+  menuItems.push({ label: 'Terastallize', act: 'terast' });
+  menuItems.push({ label: 'Z-Move', act: 'zmove' });
+
+  menuItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item' + (item.hasSub ? ' has-sub' : '');
+    div.textContent = item.label;
+    // Hover-preview of switch submenu only on desktop (no touch).
+    if (!isMobile()) {
+      div.addEventListener('mouseenter', (e) => {
+        if (item.act === 'switch') showSwitchSubmenu(div, slot);
+      });
+    }
+    const runAction = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (item.act === 'move') {
+        openTargetPicker(slot, item.moveName);
+        closeAllContextMenus();
+      } else if (item.act === 'switch') {
+        showSwitchSubmenu(div, slot);
+      } else if (item.act === 'health') {
+        openHealthModal(slot);
+        closeAllContextMenus();
+      } else if (item.act === 'dynamax') {
+        logMechanic(slot, 'Dynamax');
+        closeAllContextMenus();
+      } else if (item.act === 'mega') {
+        logMechanic(slot, 'Mega');
+        closeAllContextMenus();
+      } else if (item.act === 'terast') {
+        logMechanic(slot, 'Terast');
+        closeAllContextMenus();
+      } else if (item.act === 'zmove') {
+        logMechanic(slot, 'ZMove');
+        closeAllContextMenus();
+      }
+    };
+    div.addEventListener('click', runAction);
+    // On mobile, also bind touchend directly — some browsers delay or swallow
+    // synthesized clicks inside elements that have just changed display state.
+    div.addEventListener('touchend', (e) => {
+      if (e.changedTouches.length !== 1) return;
+      runAction(e);
+    });
+    menu.appendChild(div);
+  });
+  document.body.appendChild(menu);
+}
+
+function showSwitchSubmenu(parentItem, slot) {
+  document.querySelectorAll('.switch-list').forEach(s => s.remove());
+  const node = getCurrentNode();
+  const isSelf = isSelfSlot(slot);
+  const backArr = isSelf ? node.snapshot.back.self : node.snapshot.back.opp;
+  if (backArr.length === 0) return;
+  const rect = parentItem.getBoundingClientRect();
+  const sub = document.createElement('div');
+  sub.className = 'switch-list';
+  sub.style.left = (rect.right + 4) + 'px';
+  sub.style.top = rect.top + 'px';
+  // On mobile, hide the parent context menu so the switch sublist (centered) is
+  // the sole focus. The backdrop stays so tapping outside still dismisses.
+  if (isMobile()) {
+    document.querySelectorAll('.context-menu').forEach(m => m.style.display = 'none');
+  }
+  backArr.forEach(targetSlot => {
+    const p = state.pokemon[targetSlot];
+    const node2 = getCurrentNode();
+    const hp = node2.snapshot.active[targetSlot]?.hp || '100%';
+    if (hp === '0%') return;
+    const item = document.createElement('div');
+    item.className = 'switch-item';
+    item.innerHTML = `<img src="${spriteUrl(p.name)}" onerror="this.style.opacity=0.2"><span>${targetSlot}: ${p.name}</span>`;
+    const run = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      doSwitch(slot, targetSlot);
+      closeAllContextMenus();
+    };
+    item.addEventListener('click', run);
+    item.addEventListener('touchend', (e) => {
+      if (e.changedTouches.length !== 1) return;
+      run(e);
+    });
+    sub.appendChild(item);
+  });
+  document.body.appendChild(sub);
+}
+
+function closeAllContextMenus() {
+  document.querySelectorAll('.context-menu').forEach(m => m.remove());
+  document.querySelectorAll('.switch-list').forEach(m => m.remove());
+  document.querySelectorAll('.context-submenu').forEach(m => m.remove());
+  document.querySelectorAll('.mobile-ctx-backdrop').forEach(m => m.remove());
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.context-menu') && !e.target.closest('.switch-list')) closeAllContextMenus();
+});
+
+/* =================== ACTIONS / LOG =================== */
+function ensureLogArray() {
+  const node = getCurrentNode();
+  if (!node.snapshot.log) node.snapshot.log = [];
+  return node.snapshot.log;
+}
+
+// Build the START-of-turn state for a node based on its ancestry parent.
+// For Turn 1 nodes: derived from parent's Turn 0 selection.
+// For Turn 2+ nodes: derived from parent's end-of-turn snapshot, applying any
+//   pendingSwitches the parent left behind.
+// For Turn 0 nodes: returns an empty battle state (turn0 selection lives separately).
+function buildStartSnapshot(node) {
+  if (node.turn === 0) {
+    return {
+      turn0: node.snapshot.turn0 || { selfOrder: [], oppOrder: [] },
+      active: {}, field: {opp:[],self:[]}, back:{opp:[],self:[]}, log: []
+    };
+  }
+  const parent = findParentForArrow(node);
+  if (!parent) {
+    // No parent found — keep whatever was there, but ensure log array exists.
+    const fallback = deepCloneSnapshot(node.snapshot);
+    fallback.log = [];
+    delete fallback.pendingSwitches;
+    delete fallback.winLose;
+    return fallback;
+  }
+  if (parent.turn === 0) {
+    // Turn 1: derive field/back from turn0 selection, all HPs at 100%.
+    const sel = parent.snapshot.turn0 || {selfOrder:[], oppOrder:[]};
+    const fs = state.fieldSize;
+    const selfField = sel.selfOrder.slice(0, fs);
+    const selfBack = sel.selfOrder.slice(fs);
+    const oppField = sel.oppOrder.slice(0, fs);
+    const oppBack = sel.oppOrder.slice(fs);
+    const active = {};
+    [...selfField, ...selfBack, ...oppField, ...oppBack].forEach(s => {
+      active[s] = { hp: '100%', mega: false, dynamax: false, terast: false };
+    });
+    return {
+      active,
+      field: { opp: oppField, self: selfField },
+      back: { opp: oppBack, self: selfBack },
+      log: []
+    };
+  }
+  // Turn 2+: clone parent's end-state. Since switches are now applied immediately
+  // on the parent (during parseAndApplyToken), field/back already reflect the
+  // post-switch positions and we just need a clean clone with a fresh log.
+  const snap = deepCloneSnapshot(parent.snapshot);
+  delete snap.pendingSwitches; // legacy: clear any old data that still has the flag
+  // winLose belongs to the parent's turn only — don't carry it to this turn.
+  delete snap.winLose;
+  // Field effects are NOT auto-derived from the parent at rebuild time — each
+  // turn owns its own list, fully editable by the user. The initial copy from
+  // parent happens once at node creation (see goToNextTurn / + Variation).
+  // rebuildNode preserves the node's existing fieldEffects across the rebuild.
+  snap.fieldEffects = [];
+  snap.log = [];
+  return snap;
+}
+
+// Rebuild a node's snapshot: start-state + reapplied actions.
+function rebuildNode(node) {
+  const oldLog = (node.snapshot.log || []).slice();
+  // winLose is a turn-level marker not derived from logs; preserve it across rebuild.
+  const oldWinLose = node.snapshot.winLose;
+  // Field effects belong to this turn independently — preserve verbatim,
+  // stripping any legacy `inherited` flag from older data.
+  const oldFx = (node.snapshot.fieldEffects || []).map(f => ({
+    name: f.name, turns: f.turns
+  }));
+  const start = buildStartSnapshot(node);
+  // Re-apply each logged action against `start`. The new log entries are pushed
+  // by parseAndApplyToken — match them up with old entries (same order) to
+  // carry forward the `failed` flag, which is a user mark independent of state.
+  oldLog.forEach(entry => {
+    parseAndApplyToken(entry.raw, start);
+    const just = start.log[start.log.length - 1];
+    if (just && entry.failed) just.failed = true;
+  });
+  if (oldWinLose) start.winLose = oldWinLose;
+  start.fieldEffects = oldFx;
+  node.snapshot = start;
+}
+
+// All nodes that depend on this node via variation ancestry. A node `n` depends on
+// `source` if `source` lies on the arrow-parent chain walking up from `n`.
+// Equivalent: source.turn < n.turn AND walking up from n eventually hits source.
+function getDescendantNodes(source) {
+  // Topologically sort by turn ascending — that way when we rebuild, parents are
+  // already up-to-date.
+  const out = [];
+  const candidates = state.nodes.filter(n => n.turn > source.turn);
+  candidates.sort((a, b) => a.turn - b.turn);
+  // Walk-up cache for efficiency
+  const dependsOn = new Map();
+  function depends(n) {
+    if (dependsOn.has(n.id)) return dependsOn.get(n.id);
+    if (n.turn <= source.turn) {
+      dependsOn.set(n.id, n.id === source.id);
+      return n.id === source.id;
+    }
+    const p = findParentForArrow(n);
+    const result = p ? (p.id === source.id ? true : depends(p)) : false;
+    dependsOn.set(n.id, result);
+    return result;
+  }
+  candidates.forEach(n => { if (depends(n)) out.push(n); });
+  return out;
+}
+
+// Propagate changes from `source` outward.
+function propagateFrom(source) {
+  const downstream = getDescendantNodes(source);
+  downstream.forEach(n => rebuildNode(n));
+}
+
+// Rebuild every node in the graph in turn order. Useful when something global
+// changes (e.g. pokemon name/move edits, field size, team imports) where it's
+// simpler to recompute everything than to figure out the affected subset.
+function rebuildAllNodes() {
+  const sorted = [...state.nodes].sort((a, b) => a.turn - b.turn);
+  sorted.forEach(n => {
+    if (n.turn === 0) return; // turn 0 has no derived state
+    rebuildNode(n);
+  });
+}
+
+function pushLog(entry) {
+  const node = getCurrentNode();
+  // Block new actions on turns that have been marked as Winning or Losing —
+  // the run is considered over for this variation.
+  if (node.snapshot.winLose) return;
+  const log = ensureLogArray();
+  log.push(entry);
+  // Rebuild current node from start + log (applies the new action's effect).
+  rebuildNode(node);
+  // Propagate to all downstream descendants.
+  propagateFrom(node);
+  // Live re-render every visual surface.
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+function logMechanic(slot, mech) {
+  // raw token: "<slot> Mega" / "<slot> ZMove" / "<slot> Dynamax" / "<slot> Terast"
+  let text = '';
+  const p = state.pokemon[slot];
+  const name = p.name || slot;
+  if (mech === 'Mega') text = `${slot}(${name}) is Mega Evolving!`;
+  else if (mech === 'ZMove') text = `${slot}(${name}) is using a Z-Move!`;
+  else if (mech === 'Dynamax') text = `${slot}(${name}) is Dynamaxing!`;
+  else if (mech === 'Terast') text = `${slot}(${name}) Terastallized!`;
+  // State flags are set during rebuild via parseAndApplyToken — no direct mutation here.
+  pushLog({ type:'mechanic', raw: `${slot} ${mech}`, text });
+}
+
+function openTargetPicker(actorSlot, moveName) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  // Targets are restricted to pokemon currently ON THE FIELD. Pokemon in the
+  // back can't be hit by a normal move, so we exclude them. Grouped into two
+  // visually distinct containers (Opponent / Self) so the user can tell which
+  // side they're targeting at a glance.
+  const node = getCurrentNode();
+  const oppField = [...node.snapshot.field.opp];
+  const selfField = [...node.snapshot.field.self];
+  let selected = new Set();
+  backdrop.innerHTML = `<div class="modal">
+    <h2>${escapeHtml(actorSlot)} → ${escapeHtml(moveName)}</h2>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--ink-mute);margin-bottom:12px;">Click targets (multi-select). No selection allowed.</div>
+    <div class="target-side-group opp">
+      <div class="target-side-label">Opponent</div>
+      <div class="target-picker-grid" id="targetGridOpp"></div>
+    </div>
+    <div class="target-side-group self">
+      <div class="target-side-label">Self</div>
+      <div class="target-picker-grid" id="targetGridSelf"></div>
+    </div>
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+      <button class="primary" id="targetOk">OK</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+
+  function renderGroup(gridEl, slots, emptyMsg) {
+    if (slots.length === 0) {
+      gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--ink-mute);font-family:var(--mono);font-size:11px;padding:14px;">${emptyMsg}</div>`;
+      return;
+    }
+    slots.forEach(s => {
+      const p = state.pokemon[s];
+      const monState = node.snapshot.active[s] || { hp:'100%' };
+      const card = document.createElement('div');
+      card.className = 'target-card';
+      const faintStyle = monState.hp === '0%' ? 'filter:grayscale(1) brightness(0.7);' : '';
+      card.innerHTML = `<img src="${spriteUrl(p.name)}" style="${faintStyle}" onerror="this.style.opacity=0.2"><div class="slot">${s}</div><div class="nm">${escapeHtml(p.name)}</div>`;
+      card.addEventListener('click', () => {
+        if (selected.has(s)) { selected.delete(s); card.classList.remove('selected'); }
+        else { selected.add(s); card.classList.add('selected'); }
+      });
+      gridEl.appendChild(card);
+    });
+  }
+  renderGroup(backdrop.querySelector('#targetGridOpp'), oppField, 'No opponent pokémon on the field.');
+  renderGroup(backdrop.querySelector('#targetGridSelf'), selfField, 'No self pokémon on the field.');
+
+  backdrop.querySelector('#targetOk').addEventListener('click', () => {
+    const targets = [...selected];
+    backdrop.remove();
+    commitMove(actorSlot, moveName, targets);
+  });
+}
+
+function commitMove(actorSlot, moveName, targets) {
+  const actorName = state.pokemon[actorSlot].name || actorSlot;
+  let text;
+  if (targets.length === 0) {
+    text = `${actorSlot}(${actorName}) used ${moveName}.`;
+  } else {
+    const names = targets.map(t => `${t}(${state.pokemon[t].name||t})`);
+    let joined;
+    if (names.length === 1) joined = names[0];
+    else if (names.length === 2) joined = names.join(' and ');
+    else joined = names.slice(0,-1).join(', ') + ', and ' + names[names.length-1];
+    text = `${actorSlot}(${actorName}) used ${moveName} on ${joined}.`;
+  }
+  const raw = `${actorSlot} ${moveName}${targets.length ? ' ' + targets.join('') : ''}`;
+  pushLog({ type:'move', raw, text });
+}
+
+function openHealthModal(slot) {
+  const node = getCurrentNode();
+  const cur = node.snapshot.active[slot]?.hp || '100%';
+  openInputModal(`Set Health for ${slot}`, cur, (val) => {
+    if (val == null) return;
+    const actorName = state.pokemon[slot].name || slot;
+    // pushLog handles state mutation via rebuildNode + propagation.
+    pushLog({ type:'health', raw: `${slot} health ${val}`, text: `${slot}(${actorName})'s HP is now at ${val}.` });
+  });
+}
+
+function doSwitch(slot, targetSlot) {
+  const actorName = state.pokemon[slot].name || slot;
+  const text = `${slot}(${actorName}) is switched out for ${targetSlot}(${state.pokemon[targetSlot].name||targetSlot}).`;
+  // pushLog handles snapshot updates via the rebuild pipeline.
+  pushLog({ type:'switch', raw: `${slot} switch ${targetSlot}`, text });
+}
+
+function goToPrevTurn() {
+  const node = getCurrentNode();
+  if (node.turn === 0) return;
+  // Walk variation ancestry to find the previous turn's matching node.
+  const parent = findParentForArrow(node);
+  if (parent) {
+    state.currentNodeId = parent.id;
+    const cur = getCurrentNode();
+    if (cur && cur.turn === 0) {
+      state.turn0Selection = { 
+        selfOrder: [...(cur.snapshot.turn0?.selfOrder || [])],
+        oppOrder: [...(cur.snapshot.turn0?.oppOrder || [])]
+      };
+    }
+    renderAll();
+  }
+}
+
+function goToNextTurn() {
+  const node = getCurrentNode();
+  // Look for an existing node at the next turn with the SAME variation name —
+  // that's the natural continuation of this lineage.
+  const existing = state.nodes.find(n => n.turn === node.turn + 1 && n.variation === node.variation);
+  if (existing) {
+    state.currentNodeId = existing.id;
+    renderAll();
+    return;
+  }
+  // Seed field effects from the parent: decrement each by 1, drop any whose
+  // timer just hit zero. This happens once at creation; the new node owns the
+  // list independently from this point forward.
+  const seedFx = (node.snapshot.fieldEffects || [])
+    .map(f => ({ name: f.name, turns: f.turns - 1 }))
+    .filter(f => f.turns > 0);
+  // Create a placeholder node, then immediately rebuild it from its variation parent.
+  // This guarantees the new node uses the same start-state derivation logic that
+  // propagation relies on, keeping behavior consistent everywhere.
+  const newNode = {
+    id: uid(),
+    turn: node.turn + 1,
+    variation: node.variation,
+    branchTurn: node.branchTurn,
+    parentId: node.id,
+    snapshot: {
+      active:{}, field:{opp:[],self:[]}, back:{opp:[],self:[]},
+      log:[],
+      fieldEffects: seedFx
+    }
+  };
+  state.nodes.push(newNode);
+  rebuildNode(newNode);
+  state.currentNodeId = newNode.id;
+  renderAll();
+}
+
+/* =================== LOG RENDER =================== */
+function renderLog() {
+  const node = getCurrentNode();
+  const body = document.getElementById('logBody');
+  body.innerHTML = '';
+  // Reset button only applies to Turn 1+ — no actions exist on Turn 0.
+  const resetBtn = document.getElementById('logResetBtn');
+  if (resetBtn) resetBtn.disabled = !node || node.turn === 0;
+  if (!node) return;
+  if (node.turn === 0) {
+    // Show turn 0 selection summary
+    const sel = node.snapshot.turn0 || { selfOrder: [], oppOrder: [] };
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.style.cursor = 'default'; // not reorderable on turn 0
+    line.innerHTML = `<span class="log-num">T0</span><span class="log-text">Self chose: ${sel.selfOrder.join(', ')||'—'} · Opp chose: ${sel.oppOrder.join(', ')||'—'}</span>`;
+    body.appendChild(line);
+    return;
+  }
+  const log = node.snapshot.log || [];
+  log.forEach((entry, idx) => {
+    const line = document.createElement('div');
+    line.className = 'log-line' + (entry.failed ? ' failed' : '');
+    line.dataset.idx = idx;
+    line.draggable = true;
+    line.innerHTML = `<span class="drag-grip" aria-hidden="true">⋮⋮</span><span class="log-num">${String(idx+1).padStart(2,'0')}</span><span class="log-text">${escapeHtml(entry.text)}</span><button class="del-btn" title="Delete">×</button>`;
+    // Click/tap on the text toggles the "failed" mark. Strikethrough is purely
+    // visual on the log; the export gets a " (failed)" suffix on the raw token.
+    line.querySelector('.log-text').addEventListener('click', (e) => {
+      e.stopPropagation();
+      entry.failed = !entry.failed;
+      // No state recompute needed — the action's effect on HP/positions is
+      // unchanged, this is just a label. Just re-render the log to flip the
+      // strikethrough on/off.
+      renderLog();
+    });
+    line.querySelector('.del-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      log.splice(idx, 1);
+      rebuildNode(node);
+      propagateFrom(node);
+      renderBattle();
+      renderNodeEditor();
+      renderLog();
+    });
+    attachLogLineDrag(line, idx);
+    body.appendChild(line);
+  });
+
+  // Pinned field effects entry — shown above the terminal entry. Italic line
+  // listing all active effects on this turn. Not draggable, not deletable
+  // (manage through the Field... modal).
+  const fx = node.snapshot.fieldEffects || [];
+  if (fx.length > 0) {
+    const fxLine = document.createElement('div');
+    fxLine.className = 'log-line field-fx-line';
+    const fxStr = fx.map(f => `${escapeHtml(f.name)}: ${f.turns}`).join(', ');
+    fxLine.innerHTML = `<span class="log-num">✦</span><span class="log-text">${fxStr}</span>`;
+    body.appendChild(fxLine);
+  }
+
+  // Pinned terminal entry — shown last when the turn is marked Winning/Losing.
+  // Not draggable, not deletable (toggle the button on the battle screen to remove).
+  if (node.snapshot.winLose) {
+    const which = node.snapshot.winLose;
+    const term = document.createElement('div');
+    term.className = 'log-line terminal ' + which;
+    term.innerHTML = `<span class="log-num">${which === 'win' ? '★' : '✖'}</span><span class="log-text">(${which === 'win' ? 'Winning' : 'Losing'})</span>`;
+    body.appendChild(term);
+  }
+}
+
+/* =================== RESET CURRENT TURN =================== */
+// Clears every action from the current turn's variation, including its
+// winning/losing terminal marker. Downstream nodes get rebuilt to reflect the
+// empty start state. Turn 0 selection is left alone — resetting Turn 0 would
+// clear the player picks, which is the wrong tool for that job (delete the
+// node instead via the flowchart context menu).
+function resetCurrentTurnLog() {
+  const node = getCurrentNode();
+  if (!node) return;
+  if (node.turn === 0) return; // turn 0 has no action log to clear
+  node.snapshot.log = [];
+  delete node.snapshot.winLose;
+  // Clear all field effects for this turn — there's no special "inherited"
+  // carve-out anymore; the user owns each turn's list completely.
+  node.snapshot.fieldEffects = [];
+  rebuildNode(node);
+  propagateFrom(node);
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+/* =================== LOG REORDER (DRAG) =================== */
+function commitLogReorder(fromIdx, toIdx) {
+  const node = getCurrentNode();
+  const log = node.snapshot.log;
+  if (!log) return;
+  if (fromIdx === toIdx) return;
+  if (fromIdx < 0 || toIdx < 0 || fromIdx >= log.length || toIdx > log.length) return;
+  const [moved] = log.splice(fromIdx, 1);
+  // If the destination index was after the source, removing first shifts it down by 1.
+  if (toIdx > fromIdx) toIdx -= 1;
+  log.splice(toIdx, 0, moved);
+  rebuildNode(node);
+  propagateFrom(node);
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+function attachLogLineDrag(line, idx) {
+  // ===== Desktop HTML5 drag =====
+  line.addEventListener('dragstart', (e) => {
+    line.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', String(idx)); } catch(_) {}
+    // Use the row itself as the drag image
+    if (e.dataTransfer.setDragImage) {
+      try { e.dataTransfer.setDragImage(line, 20, 10); } catch(_) {}
+    }
+  });
+  line.addEventListener('dragend', () => {
+    line.classList.remove('dragging');
+    document.querySelectorAll('.log-line').forEach(l => {
+      l.classList.remove('drop-above', 'drop-below');
+    });
+  });
+  line.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const rect = line.getBoundingClientRect();
+    const isAbove = (e.clientY - rect.top) < rect.height / 2;
+    document.querySelectorAll('.log-line').forEach(l => {
+      l.classList.remove('drop-above', 'drop-below');
+    });
+    line.classList.add(isAbove ? 'drop-above' : 'drop-below');
+  });
+  line.addEventListener('dragleave', (e) => {
+    // Only clear if leaving entirely (not for entering a child)
+    if (!line.contains(e.relatedTarget)) {
+      line.classList.remove('drop-above', 'drop-below');
+    }
+  });
+  line.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(fromIdx)) return;
+    const rect = line.getBoundingClientRect();
+    const isAbove = (e.clientY - rect.top) < rect.height / 2;
+    const toIdx = isAbove ? idx : idx + 1;
+    document.querySelectorAll('.log-line').forEach(l => {
+      l.classList.remove('drop-above', 'drop-below');
+    });
+    commitLogReorder(fromIdx, toIdx);
+  });
+
+  // ===== Mobile long-press → drag =====
+  let pressTimer = null;
+  let dragGhost = null;
+  let touchActive = false;
+  let touchStartY = 0;
+  let touchStartX = 0;
+
+  line.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    if (e.target.closest('.del-btn')) return; // delete button handles its own taps
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    pressTimer = setTimeout(() => {
+      // Initiate drag after long-press
+      touchActive = true;
+      line.classList.add('dragging');
+      // Create floating ghost
+      dragGhost = line.cloneNode(true);
+      dragGhost.classList.add('drag-ghost');
+      dragGhost.classList.remove('dragging');
+      dragGhost.style.left = (touchStartX - 30) + 'px';
+      dragGhost.style.top = (touchStartY - 16) + 'px';
+      dragGhost.style.width = (line.offsetWidth - 20) + 'px';
+      document.body.appendChild(dragGhost);
+      if (navigator.vibrate) try { navigator.vibrate(20); } catch(_) {}
+    }, 350);
+  }, { passive: true });
+
+  line.addEventListener('touchmove', (e) => {
+    if (!touchActive) {
+      // If user moves before long-press fires, cancel
+      if (pressTimer) {
+        const dx = Math.abs(e.touches[0].clientX - touchStartX);
+        const dy = Math.abs(e.touches[0].clientY - touchStartY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+      return;
+    }
+    e.preventDefault();
+    const t = e.touches[0];
+    if (dragGhost) {
+      dragGhost.style.left = (t.clientX - 30) + 'px';
+      dragGhost.style.top = (t.clientY - 16) + 'px';
+    }
+    // Determine which log-line is under the finger
+    document.querySelectorAll('.log-line').forEach(l => {
+      l.classList.remove('drop-above', 'drop-below');
+    });
+    const target = findLogLineUnder(t.clientX, t.clientY);
+    if (target && target !== line) {
+      const rect = target.getBoundingClientRect();
+      const isAbove = (t.clientY - rect.top) < rect.height / 2;
+      target.classList.add(isAbove ? 'drop-above' : 'drop-below');
+    }
+  }, { passive: false });
+
+  const finishTouch = (e) => {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    if (!touchActive) return;
+    touchActive = false;
+    line.classList.remove('dragging');
+    if (dragGhost) { dragGhost.remove(); dragGhost = null; }
+    const t = (e.changedTouches && e.changedTouches[0]) || null;
+    document.querySelectorAll('.log-line').forEach(l => {
+      l.classList.remove('drop-above', 'drop-below');
+    });
+    if (!t) return;
+    const target = findLogLineUnder(t.clientX, t.clientY);
+    if (!target || target === line) return;
+    const tIdx = parseInt(target.dataset.idx, 10);
+    if (isNaN(tIdx)) return;
+    const rect = target.getBoundingClientRect();
+    const isAbove = (t.clientY - rect.top) < rect.height / 2;
+    const toIdx = isAbove ? tIdx : tIdx + 1;
+    commitLogReorder(idx, toIdx);
+  };
+  line.addEventListener('touchend', finishTouch);
+  line.addEventListener('touchcancel', finishTouch);
+}
+
+function findLogLineUnder(x, y) {
+  const all = document.querySelectorAll('#logBody .log-line');
+  for (const l of all) {
+    const r = l.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return l;
+  }
+  return null;
+}
+
+/* =================== MODALS =================== */
+function openInputModal(title, defaultValue, cb) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>${escapeHtml(title)}</h2>
+    <input type="text" id="inpMV" value="${escapeHtml(defaultValue||'')}">
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+      <button class="primary" id="okBtn">OK</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  const inp = backdrop.querySelector('#inpMV');
+  inp.focus(); inp.select();
+  backdrop.querySelector('#okBtn').addEventListener('click', () => {
+    const v = inp.value;
+    backdrop.remove();
+    cb(v);
+  });
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { backdrop.querySelector('#okBtn').click(); }
+    else if (e.key === 'Escape') { backdrop.remove(); }
+  });
+}
+
+function openImportModal() {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Import Flowchart</h2>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-mute);margin-bottom:6px;">Paste the full export string below.</div>
+    <textarea id="ta"></textarea>
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+      <button class="primary" id="okBtn">Import</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('#okBtn').addEventListener('click', () => {
+    const v = backdrop.querySelector('#ta').value;
+    backdrop.remove();
+    importFlowchart(v);
+  });
+}
+
+function openExportModal() {
+  const text = exportFlowchart();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Export Flowchart</h2>
+    <textarea id="ta" readonly></textarea>
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Close</button>
+      <button class="primary" id="copyBtn">Copy</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('#ta').value = text;
+  backdrop.querySelector('#copyBtn').addEventListener('click', () => {
+    backdrop.querySelector('#ta').select();
+    document.execCommand('copy');
+    backdrop.querySelector('#copyBtn').textContent = 'Copied!';
+  });
+}
+
+/* =================== EXPORT AS URL ===================
+   Encodes the full flowchart text as a URL hash fragment using gzip + base64url.
+   The hash never leaves the user's browser — no backend, no server, nothing
+   logged anywhere. Anyone with the link decodes the same state locally on
+   page load.
+*/
+
+// Convert a Uint8Array to a base64url string (URL-safe, no padding).
+function bytesToBase64Url(bytes) {
+  let bin = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function base64UrlToBytes(str) {
+  // Pad back to a multiple of 4 and revert URL-safe chars.
+  const norm = str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice(0, (4 - str.length % 4) % 4);
+  const bin = atob(norm);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function compressString(text) {
+  // CompressionStream gives us native gzip on every modern browser. If it's
+  // unavailable, fall back to uncompressed UTF-8 with a marker so the decoder
+  // can tell the two formats apart.
+  const input = new TextEncoder().encode(text);
+  if (typeof CompressionStream === 'undefined') {
+    return { bytes: input, compressed: false };
+  }
+  const cs = new CompressionStream('gzip');
+  const writer = cs.writable.getWriter();
+  writer.write(input);
+  writer.close();
+  const chunks = [];
+  const reader = cs.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  let total = 0;
+  chunks.forEach(c => total += c.length);
+  const out = new Uint8Array(total);
+  let off = 0;
+  chunks.forEach(c => { out.set(c, off); off += c.length; });
+  return { bytes: out, compressed: true };
+}
+
+async function decompressBytes(bytes, compressed) {
+  if (!compressed) return new TextDecoder().decode(bytes);
+  const ds = new DecompressionStream('gzip');
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const chunks = [];
+  const reader = ds.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  let total = 0;
+  chunks.forEach(c => total += c.length);
+  const out = new Uint8Array(total);
+  let off = 0;
+  chunks.forEach(c => { out.set(c, off); off += c.length; });
+  return new TextDecoder().decode(out);
+}
+
+/* =================== URL ENCODING v2 ===================
+   Improvements over the legacy gzip-text path (g/ prefix):
+     - Use deflate-raw instead of gzip → saves the gzip 18-byte header+trailer.
+     - Try brotli when available (currently only in some browsers) → ~10% better.
+   Falls back gracefully through the chain: brotli → deflate-raw → gzip → none.
+   The format flag in the prefix tells the decoder which algorithm to use.
+   Old g/ and r/ URLs still decode via the legacy text path.
+*/
+async function compressRaw(bytes) {
+  if (typeof CompressionStream === 'undefined') return { bytes, algo: 'none' };
+  // Try brotli first (best compression), then deflate-raw, then gzip.
+  for (const algo of ['brotli', 'deflate-raw', 'gzip']) {
+    try {
+      const cs = new CompressionStream(algo);
+      const writer = cs.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      const chunks = [];
+      const reader = cs.readable.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      let total = 0;
+      chunks.forEach(c => total += c.length);
+      const out = new Uint8Array(total);
+      let off = 0;
+      chunks.forEach(c => { out.set(c, off); off += c.length; });
+      return { bytes: out, algo };
+    } catch { /* try next */ }
+  }
+  return { bytes, algo: 'none' };
+}
+
+async function decompressRaw(bytes, algo) {
+  if (algo === 'none') return bytes;
+  const ds = new DecompressionStream(algo);
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const chunks = [];
+  const reader = ds.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  let total = 0;
+  chunks.forEach(c => total += c.length);
+  const out = new Uint8Array(total);
+  let off = 0;
+  chunks.forEach(c => { out.set(c, off); off += c.length; });
+  return out;
+}
+
+async function openExportUrlModal() {
+  let url;
+  try {
+    // Use the same text export the regular Export button produces, then
+    // compress with the best algorithm available.
+    const text = exportFlowchart();
+    const bytes = new TextEncoder().encode(text);
+    const { bytes: compressed, algo } = await compressRaw(bytes);
+    const encoded = bytesToBase64Url(compressed);
+    // Prefix encodes the algorithm so the decoder picks the right path.
+    //   v2b/ → brotli       v2d/ → deflate-raw       v2g/ → gzip       v2n/ → none
+    let prefix;
+    if (algo === 'brotli')         prefix = 'v2b/';
+    else if (algo === 'deflate-raw') prefix = 'v2d/';
+    else if (algo === 'gzip')      prefix = 'v2g/';
+    else                            prefix = 'v2n/';
+    const base = location.origin + location.pathname + location.search;
+    url = base + '#fc=' + prefix + encoded;
+  } catch (err) {
+    // Fall back to legacy gzip-text path on any error.
+    try {
+      const text = exportFlowchart();
+      const { bytes, compressed } = await compressString(text);
+      const encoded = bytesToBase64Url(bytes);
+      const prefix = compressed ? 'g/' : 'r/';
+      const base = location.origin + location.pathname + location.search;
+      url = base + '#fc=' + prefix + encoded;
+    } catch (err2) {
+      alert('Failed to encode URL: ' + err2.message);
+      return;
+    }
+  }
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Export as URL</h2>
+    <input type="text" id="urlInput" readonly value="">
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Close</button>
+      <button class="primary" id="urlCopyBtn">Copy</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  const input = backdrop.querySelector('#urlInput');
+  input.value = url;
+  input.select();
+  backdrop.querySelector('#urlCopyBtn').addEventListener('click', () => {
+    input.select();
+    document.execCommand('copy');
+    backdrop.querySelector('#urlCopyBtn').textContent = 'Copied!';
+  });
+}
+
+// Called at boot: if the URL hash contains an encoded flowchart, decode and
+// apply it as if the user pasted into the Import modal.
+//
+// Recognized prefixes (decoder is forward-compatible):
+//   v2b/  v2d/  v2g/  v2n/  — text export + (brotli|deflate-raw|gzip|none)
+//   g/    r/                — legacy text export + (gzip|none)
+async function maybeImportFromUrlHash() {
+  const hash = location.hash || '';
+  // v2 prefixes
+  const mv2 = hash.match(/^#fc=v2([bdgn])\/(.+)$/);
+  if (mv2) {
+    const algoMap = { b: 'brotli', d: 'deflate-raw', g: 'gzip', n: 'none' };
+    const algo = algoMap[mv2[1]];
+    const encoded = mv2[2];
+    try {
+      const compressed = base64UrlToBytes(encoded);
+      const decompressed = await decompressRaw(compressed, algo);
+      const text = new TextDecoder().decode(decompressed);
+      importFlowchart(text);
+    } catch (err) {
+      console.warn('Failed to decode v2 flowchart from URL hash:', err);
+    }
+    return;
+  }
+  // Legacy prefixes
+  const mLegacy = hash.match(/^#fc=([gr])\/(.+)$/);
+  if (mLegacy) {
+    const compressed = mLegacy[1] === 'g';
+    const encoded = mLegacy[2];
+    try {
+      const bytes = base64UrlToBytes(encoded);
+      const text = await decompressBytes(bytes, compressed);
+      importFlowchart(text);
+    } catch (err) {
+      console.warn('Failed to decode flowchart from URL hash:', err);
+    }
+  }
+}
+
+function openImportSideModal(side) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `<div class="modal">
+    <h2>Import ${side === 'opp' ? 'A-F (Opponent)' : '1-6 (Self)'}</h2>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-mute);margin-bottom:6px;">Paste Showdown-format team. Up to 6 pokémon, separated by blank lines.</div>
+    <textarea id="ta"></textarea>
+    <div class="modal-actions">
+      <button onclick="this.closest('.modal-backdrop').remove()">Cancel</button>
+      <button class="primary" id="okBtn">Import</button>
+    </div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('#okBtn').addEventListener('click', () => {
+    const v = backdrop.querySelector('#ta').value;
+    backdrop.remove();
+    importTeamSide(side, v);
+  });
+}
+
+/* =================== IMPORT / EXPORT TEAM =================== */
+// Parse a single Showdown pokemon block (no leading prefix)
+function parseShowdownBlock(blockLines) {
+  const p = makeBlankPokemon();
+  if (!blockLines.length) return p;
+  // First line: Name (Gender) @ Item
+  let first = blockLines[0].trim();
+  // Strip leading slot prefix like "A: " or "1: " — caller may pass with or without
+  first = first.replace(/^[A-F1-6]:\s*/, '');
+  // @ Item
+  const atIdx = first.lastIndexOf('@');
+  if (atIdx >= 0) {
+    p.item = first.slice(atIdx+1).trim();
+    first = first.slice(0, atIdx).trim();
+  }
+  // Gender (M)/(F)
+  const gm = first.match(/\(([MF])\)\s*$/);
+  if (gm) {
+    p.gender = gm[1];
+    first = first.slice(0, gm.index).trim();
+  }
+  p.name = first.trim();
+
+  let moveIdx = 0;
+  for (let i = 1; i < blockLines.length; i++) {
+    const ln = blockLines[i].trim();
+    if (!ln) continue;
+    if (/^Ability:/i.test(ln)) p.ability = ln.replace(/^Ability:\s*/i,'').trim();
+    else if (/^Shiny:/i.test(ln)) p.shiny = ln.replace(/^Shiny:\s*/i,'').trim();
+    else if (/^Tera Type:/i.test(ln)) p.tera = ln.replace(/^Tera Type:\s*/i,'').trim();
+    else if (/^EVs:/i.test(ln)) p.evs = ln.replace(/^EVs:\s*/i,'').trim();
+    else if (/^IVs:/i.test(ln)) p.ivs = ln.replace(/^IVs:\s*/i,'').trim();
+    else if (/Nature\s*$/i.test(ln)) p.nature = ln.replace(/\s*Nature\s*$/i,'').trim();
+    else if (/^-\s*/.test(ln) && moveIdx < 4) {
+      p.moves[moveIdx++] = ln.replace(/^-\s*/,'').trim();
+    }
+  }
+  return p;
+}
+
+function importTeamSide(side, text) {
+  const slots = side === 'opp' ? SLOTS_OPP : SLOTS_SELF;
+  // Split by blank lines
+  const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  blocks.slice(0, 6).forEach((block, idx) => {
+    const lines = block.split(/\r?\n/);
+    state.pokemon[slots[idx]] = parseShowdownBlock(lines);
+  });
+  // New pokemon data → log text references and battle rendering both depend on
+  // names/moves; rebuild every node so they're consistent.
+  rebuildAllNodes();
+  renderTeams();
+  renderAll();
+}
+
+/* =================== EXPORT / IMPORT FLOWCHART =================== */
+function exportFlowchart() {
+  const lines = [];
+  // Export A-F then 1-6 (only filled). Each block separated by a blank line.
+  const blocks = [];
+  [...SLOTS_OPP, ...SLOTS_SELF].forEach(slot => {
+    const p = state.pokemon[slot];
+    if (!p.name && p.moves.every(m=>!m)) return;
+    const header = [];
+    let h = `${slot}: ${p.name}`;
+    if (p.gender) h += ` (${p.gender})`;
+    if (p.item) h += ` @ ${p.item}`;
+    header.push(h);
+    if (p.ability) header.push(`Ability: ${p.ability}`);
+    if (p.shiny) header.push(`Shiny: ${p.shiny}`);
+    if (p.tera) header.push(`Tera Type: ${p.tera}`);
+    if (p.evs) header.push(`EVs: ${p.evs}`);
+    if (p.nature) header.push(`${p.nature} Nature`);
+    if (p.ivs) header.push(`IVs: ${p.ivs}`);
+    p.moves.forEach(m => { if (m) header.push(`- ${m}`); });
+    blocks.push(header.join('\n'));
+  });
+  lines.push(blocks.join('\n\n'));
+  lines.push('');
+  lines.push(`On field: ${state.fieldSize}`);
+  lines.push('');
+  // For each turn 0 node, write its variation and chain of children for each variation
+  // Order: walk in order traversal grouped by variation chain
+  // We'll dump every node as "TurnN(var): tokens..."
+  // Order: by turn ascending, then by variation name
+  const sorted = [...state.nodes].sort((a,b) => a.turn - b.turn || a.variation.localeCompare(b.variation));
+  sorted.forEach(n => {
+    if (n.turn === 0) {
+      const sel = n.snapshot.turn0 || {selfOrder:[], oppOrder:[]};
+      const selfStr = sel.selfOrder.slice(0, state.fieldSize).join('') + (sel.selfOrder.length > state.fieldSize ? '(' + sel.selfOrder.slice(state.fieldSize).join('') + ')' : '');
+      const oppStr = sel.oppOrder.slice(0, state.fieldSize).join('') + (sel.oppOrder.length > state.fieldSize ? '(' + sel.oppOrder.slice(state.fieldSize).join('') + ')' : '');
+      lines.push(`Turn0(${n.variation}): ${selfStr}, ${oppStr}`);
+    } else {
+      const log = n.snapshot.log || [];
+      // Each entry's raw token may carry a " (failed)" suffix before the comma
+      // when the user has marked it as a failed attempt.
+      const tokens = log.map(e => e.raw + (e.failed ? ' (failed)' : '')).join(', ');
+      // Field effects: appended after the tokens, before any [WIN]/[LOSE].
+      // Format: " {Name1: Turns1, Name2: Turns2}". Both inherited and
+      // newly-added effects are serialized — on import the inheritance flag is
+      // re-derived from parent context.
+      const fx = n.snapshot.fieldEffects || [];
+      let fxStr = '';
+      if (fx.length > 0) {
+        fxStr = ' {' + fx.map(f => `${f.name}: ${f.turns}`).join(', ') + '}';
+      }
+      // Terminal marker as a space-prefixed bracket suffix per spec.
+      let suffix = '';
+      if (n.snapshot.winLose === 'win') suffix = ' [WIN]';
+      else if (n.snapshot.winLose === 'lose') suffix = ' [LOSE]';
+      lines.push(`Turn${n.turn}(${n.variation}): ${tokens}${fxStr}${suffix}`);
+    }
+  });
+  return lines.join('\n');
+}
+
+function importFlowchart(text) {
+  // Reset
+  [...SLOTS_SELF, ...SLOTS_OPP].forEach(s => state.pokemon[s] = makeBlankPokemon());
+  state.nodes = [];
+  state.currentNodeId = null;
+  state.turn0Selection = { selfOrder: [], oppOrder: [] };
+
+  const lines = text.split(/\r?\n/);
+  // Split into pokemon blocks + remainder.
+  // A new block starts whenever a line begins with a slot prefix like "A:" or "1:".
+  // Blank lines also flush the current block (Showdown style). This dual-detection
+  // makes the parser robust against malformed input that's missing blank separators.
+  let blockBuffer = [];
+  let mode = 'team';
+  const isSlotHeader = (s) => /^[A-F1-6]:\s*\S/.test(s.trim());
+
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    if (/^On field:/i.test(ln)) {
+      flushBlock(blockBuffer);
+      blockBuffer = [];
+      const m = ln.match(/On field:\s*(\d+)/i);
+      if (m) state.fieldSize = parseInt(m[1]) || 2;
+      mode = 'turns';
+      continue;
+    }
+    if (/^Turn\d+\(/i.test(ln)) {
+      if (mode === 'team') {
+        flushBlock(blockBuffer); blockBuffer = []; mode = 'turns';
+      }
+      parseTurnLine(ln);
+      continue;
+    }
+    if (mode === 'team') {
+      // If a slot header appears AND we already have content buffered, flush first.
+      if (isSlotHeader(ln) && blockBuffer.length > 0) {
+        flushBlock(blockBuffer);
+        blockBuffer = [];
+      }
+      if (ln.trim() === '') {
+        flushBlock(blockBuffer); blockBuffer = [];
+      } else {
+        blockBuffer.push(ln);
+      }
+    }
+  }
+  if (blockBuffer.length && mode === 'team') flushBlock(blockBuffer);
+
+  // Make sure at least one turn 0 exists
+  if (state.nodes.length === 0) createInitialNodeIfNone();
+  // pick first turn0 as current
+  const first0 = state.nodes.find(n => n.turn === 0);
+  state.currentNodeId = first0 ? first0.id : (state.nodes[0]?.id || null);
+  // Restore turn0 selection if applicable
+  const cur = getCurrentNode();
+  if (cur && cur.turn === 0) {
+    state.turn0Selection = {
+      selfOrder: [...(cur.snapshot.turn0?.selfOrder || [])],
+      oppOrder: [...(cur.snapshot.turn0?.oppOrder || [])]
+    };
+  }
+  // Final consistency pass: rebuild every turn-1+ node so their start states are
+  // derived from the current set of parents and team data, not the values that
+  // were live during the streaming import.
+  rebuildAllNodes();
+  renderAll();
+}
+
+function flushBlock(buffer) {
+  if (!buffer.length) return;
+  const first = buffer[0].trim();
+  const m = first.match(/^([A-F1-6]):\s*/);
+  if (!m) return;
+  const slot = m[1];
+  state.pokemon[slot] = parseShowdownBlock(buffer);
+}
+
+function parseTurnLine(line) {
+  // Turn0(1): 13(24), BC(AE)  OR  TurnN(var): tokens, tokens
+  const m = line.match(/^Turn(\d+)\(([^)]+)\):\s*(.*)$/i);
+  if (!m) return;
+  const turn = parseInt(m[1]);
+  const variation = m[2];
+  const rest = m[3].trim();
+  if (turn === 0) {
+    const parts = rest.split(',').map(p => p.trim());
+    const selfPart = parts[0] || '';
+    const oppPart = parts[1] || '';
+    const selfOrder = parsePicks(selfPart);
+    const oppOrder = parsePicks(oppPart);
+    const node = {
+      id: uid(), turn: 0, variation, branchTurn: 0, parentId: null,
+      snapshot: { turn0: { selfOrder, oppOrder }, active: {}, field:{opp:[],self:[]}, back:{opp:[],self:[]}, log: [] }
+    };
+    state.nodes.push(node);
+    return;
+  }
+
+  // Find parent via variation ancestry at turn-1.
+  let parent = null;
+  const ancestry = variationAncestry(variation);
+  for (const v of ancestry) {
+    parent = state.nodes.find(n => n.turn === turn - 1 && n.variation === v);
+    if (parent) break;
+  }
+  if (!parent) {
+    // last-resort fallback
+    const candidates = state.nodes.filter(n => n.turn === turn - 1);
+    parent = candidates[candidates.length-1];
+  }
+  if (!parent) return;
+
+  const snap = deepCloneSnapshot(parent.snapshot);
+  if (parent.turn === 0) {
+    const sel = parent.snapshot.turn0 || {selfOrder:[], oppOrder:[]};
+    const fs = state.fieldSize;
+    snap.field = { self: sel.selfOrder.slice(0,fs), opp: sel.oppOrder.slice(0,fs) };
+    snap.back = { self: sel.selfOrder.slice(fs), opp: sel.oppOrder.slice(fs) };
+    snap.active = {};
+    [...sel.selfOrder, ...sel.oppOrder].forEach(s => snap.active[s] = { hp: '100%' });
+    delete snap.turn0;
+  } else {
+    // Legacy data from older exports may still carry pendingSwitches; drop it
+    // since the new model applies switches immediately during token replay.
+    delete snap.pendingSwitches;
+  }
+  // Parse trailing markers in reverse order: terminal first, then field effects,
+  // since the format is "<tokens> {field effects} [WIN/LOSE]".
+  let restClean = rest;
+  let importedWinLose = null;
+  const winMatch = restClean.match(/\s*\[WIN\]\s*$/i);
+  const loseMatch = restClean.match(/\s*\[LOSE\]\s*$/i);
+  if (winMatch) {
+    importedWinLose = 'win';
+    restClean = restClean.slice(0, winMatch.index).trim();
+  } else if (loseMatch) {
+    importedWinLose = 'lose';
+    restClean = restClean.slice(0, loseMatch.index).trim();
+  }
+  // Field effects block: " {Name1: Turns1, Name2: Turns2}" at end of remaining
+  // tokens. Match the rightmost {...} group, ignoring whitespace.
+  let importedFieldEffects = null;
+  const fxMatch = restClean.match(/\s*\{([^{}]*)\}\s*$/);
+  if (fxMatch) {
+    const inner = fxMatch[1].trim();
+    if (inner.length > 0) {
+      importedFieldEffects = inner.split(',').map(p => {
+        const parts = p.split(':');
+        if (parts.length < 2) return null;
+        const name = parts[0].trim();
+        const turns = parseInt(parts.slice(1).join(':').trim(), 10);
+        if (!name || isNaN(turns) || turns < 1) return null;
+        return { name, turns };
+      }).filter(Boolean);
+    } else {
+      importedFieldEffects = [];
+    }
+    restClean = restClean.slice(0, fxMatch.index).trim();
+  }
+  // Strip trailing comma that may remain after removing markers
+  restClean = restClean.replace(/,\s*$/, '');
+
+  snap.log = [];
+  const tokens = splitTopLevel(restClean, ',').map(s => s.trim()).filter(Boolean);
+  tokens.forEach(tok => {
+    // Strip optional " (failed)" suffix; mark the resulting log entry accordingly.
+    let isFailed = false;
+    let cleanTok = tok;
+    const failMatch = cleanTok.match(/\s*\(failed\)\s*$/i);
+    if (failMatch) {
+      isFailed = true;
+      cleanTok = cleanTok.slice(0, failMatch.index).trim();
+    }
+    parseAndApplyToken(cleanTok, snap);
+    if (isFailed) {
+      const just = snap.log[snap.log.length - 1];
+      if (just) just.failed = true;
+    }
+  });
+  if (importedWinLose) snap.winLose = importedWinLose;
+  // The export format serializes field effects per turn. Absence of a {...}
+  // block on a line means that turn has zero active effects — NOT "inherit
+  // from parent". The deepClone above carried the parent's list across; we
+  // overwrite it here unconditionally based on what the export said.
+  snap.fieldEffects = (importedFieldEffects || []).map(f => ({ name: f.name, turns: f.turns }));
+
+  // branchTurn: if parent's variation differs from this variation, this is a new branch.
+  const branchTurn = (parent.variation === variation) ? parent.branchTurn : turn;
+
+  const node = {
+    id: uid(),
+    turn,
+    variation,
+    branchTurn,
+    parentId: parent.id,
+    snapshot: snap
+  };
+  state.nodes.push(node);
+}
+
+function parsePicks(str) {
+  // "13(24)" -> active [1,3], back [2,4]
+  // "BC(AE)" -> active [B,C], back [A,E]
+  const out = [];
+  const m = str.match(/^([^()]*)(?:\(([^()]*)\))?$/);
+  if (!m) return out;
+  const active = (m[1]||'').split('').filter(Boolean);
+  const back = (m[2]||'').split('').filter(Boolean);
+  return [...active, ...back];
+}
+
+function splitTopLevel(str, sep) {
+  return str.split(sep);
+}
+
+function parseAndApplyToken(tok, snap) {
+  // Patterns:
+  // "<slot> Mega" / "<slot> ZMove" / "<slot> Dynamax" / "<slot> Terast"
+  // "<slot> health XX"
+  // "<slot> switch <targetSlot>"
+  // "<slot> <moveName> [targets]"
+  const parts = tok.split(/\s+/);
+  if (parts.length < 2) return;
+  const slot = parts[0];
+  const action = parts[1];
+  const actorName = state.pokemon[slot]?.name || slot;
+
+  if (['Mega','ZMove','Dynamax','Terast'].includes(action)) {
+    if (snap.active[slot]) {
+      if (action === 'Mega') snap.active[slot].mega = true;
+      if (action === 'Dynamax') snap.active[slot].dynamax = true;
+      if (action === 'Terast') snap.active[slot].terast = true;
+    }
+    let text = '';
+    if (action === 'Mega') text = `${slot}(${actorName}) is Mega Evolving!`;
+    else if (action === 'ZMove') text = `${slot}(${actorName}) is using a Z-Move!`;
+    else if (action === 'Dynamax') text = `${slot}(${actorName}) is Dynamaxing!`;
+    else if (action === 'Terast') text = `${slot}(${actorName}) Terastallized!`;
+    snap.log.push({ type:'mechanic', raw: tok, text });
+    return;
+  }
+  if (action === 'health') {
+    const hp = parts.slice(2).join(' ');
+    if (!snap.active[slot]) snap.active[slot] = {};
+    snap.active[slot].hp = hp;
+    snap.log.push({ type:'health', raw: tok, text: `${slot}(${actorName})'s HP is now at ${hp}.` });
+    return;
+  }
+  if (action === 'switch') {
+    const target = parts[2];
+    // Immediately swap field<->back positions on the current snapshot so the
+    // change is visible on the current turn's GUI. Next-turn nodes inherit
+    // this already-swapped state — no pendingSwitches deferral needed.
+    const isSelf = isSelfSlot(slot);
+    if (snap.field && snap.back) {
+      const fieldArr = isSelf ? snap.field.self : snap.field.opp;
+      const backArr = isSelf ? snap.back.self : snap.back.opp;
+      const fi = fieldArr.indexOf(slot);
+      const bi = backArr.indexOf(target);
+      if (fi >= 0 && bi >= 0) {
+        fieldArr[fi] = target;
+        backArr[bi] = slot;
+      }
+    }
+    const targetName = state.pokemon[target]?.name || target;
+    snap.log.push({ type:'switch', raw: tok, text: `${slot}(${actorName}) is switched out for ${target}(${targetName}).` });
+    return;
+  }
+  // Otherwise: a move. The last contiguous slot-letters at end are targets.
+  // Find trailing token that is purely [A-F1-6]+
+  let moveTokens = parts.slice(1);
+  let targets = [];
+  const lastTok = moveTokens[moveTokens.length - 1];
+  if (lastTok && /^[A-F1-6]+$/.test(lastTok)) {
+    targets = lastTok.split('');
+    moveTokens = moveTokens.slice(0, -1);
+  }
+  const moveName = moveTokens.join(' ');
+  let text;
+  if (targets.length === 0) {
+    text = `${slot}(${actorName}) used ${moveName}.`;
+  } else {
+    const names = targets.map(t => `${t}(${state.pokemon[t]?.name||t})`);
+    let joined;
+    if (names.length === 1) joined = names[0];
+    else if (names.length === 2) joined = names.join(' and ');
+    else joined = names.slice(0,-1).join(', ') + ', and ' + names[names.length-1];
+    text = `${slot}(${actorName}) used ${moveName} on ${joined}.`;
+  }
+  snap.log.push({ type:'move', raw: tok, text });
+}
+
+/* =================== THEME =================== */
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme;
+  document.documentElement.dataset.theme = cur === 'dark' ? '' : 'dark';
+});
+
+/* =================== ZOOM ON NODE CANVAS =================== */
+let canvasScale = 1;
+document.getElementById('nodeCanvasWrap').addEventListener('wheel', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    canvasScale = Math.min(2, Math.max(0.4, canvasScale + (e.deltaY < 0 ? 0.1 : -0.1)));
+    document.getElementById('nodeCanvas').style.transform = `scale(${canvasScale})`;
+  }
+}, { passive: false });
+
+/* =================== ROW RESIZE (LOG HEIGHT) =================== */
+(function setupRowSplitter() {
+  const root = document.documentElement;
+  const sp = document.getElementById('splitterH');
+  if (!sp) return;
+  let dragging = false;
+  let startY = 0;
+  let startH = 180;
+  let mobileAtStart = false;
+
+  function beginDrag(clientY) {
+    dragging = true;
+    startY = clientY;
+    const logPanel = document.querySelector('.log-panel');
+    startH = logPanel.getBoundingClientRect().height;
+    mobileAtStart = isMobile();
+    sp.classList.add('dragging');
+    document.body.classList.add('resizing-rows');
+  }
+  function updateDrag(clientY) {
+    if (!dragging) return;
+    const dy = clientY - startY;
+    const viewportH = window.innerHeight;
+    const minLog = mobileAtStart ? 90 : 60;
+    const maxLog = viewportH - (mobileAtStart ? 180 : 286);
+    let newH = startH - dy;
+    newH = Math.max(minLog, Math.min(maxLog, newH));
+    root.style.setProperty(mobileAtStart ? '--mobileLogH' : '--logH', newH + 'px');
+  }
+  function endDrag() {
+    if (dragging) {
+      dragging = false;
+      sp.classList.remove('dragging');
+      document.body.classList.remove('resizing-rows');
+    }
+  }
+
+  // Mouse
+  sp.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    beginDrag(e.clientY);
+  });
+  document.addEventListener('mousemove', (e) => { if (dragging) updateDrag(e.clientY); });
+  document.addEventListener('mouseup', endDrag);
+
+  // Touch — dedicated handlers, not synthesized mouse events
+  sp.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    beginDrag(e.touches[0].clientY);
+  }, { passive: false });
+  sp.addEventListener('touchmove', (e) => {
+    if (!dragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    updateDrag(e.touches[0].clientY);
+  }, { passive: false });
+  // Also listen on document so that finger leaving the splitter still tracks
+  document.addEventListener('touchmove', (e) => {
+    if (!dragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    updateDrag(e.touches[0].clientY);
+  }, { passive: false });
+  document.addEventListener('touchend', endDrag);
+  document.addEventListener('touchcancel', endDrag);
+})();
+
+/* =================== COLUMN RESIZE =================== */
+(function setupSplitters() {
+  const root = document.documentElement;
+  const middle = document.querySelector('.middle');
+  let dragging = null;
+  let startX = 0;
+  let startCol1 = 360;
+  let startCol3 = 380;
+
+  function getColVar(name, fallback) {
+    const cs = getComputedStyle(root).getPropertyValue(name).trim();
+    const n = parseFloat(cs);
+    return isNaN(n) ? fallback : n;
+  }
+
+  document.querySelectorAll('.splitter').forEach(sp => {
+    sp.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      dragging = sp;
+      startX = e.clientX;
+      const mr = middle.getBoundingClientRect();
+      // Read current pixel widths of the side panels rather than CSS vars
+      // (so the splitter starts from wherever the user last left it).
+      const panels = middle.querySelectorAll(':scope > .panel');
+      startCol1 = panels[0].getBoundingClientRect().width;
+      startCol3 = panels[2].getBoundingClientRect().width;
+      sp.classList.add('dragging');
+      document.body.classList.add('resizing-cols');
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const middleWidth = middle.getBoundingClientRect().width;
+    const dx = e.clientX - startX;
+    const minSide = 220;
+    const minMiddle = 260;
+    if (dragging.id === 'splitter1') {
+      let newCol1 = startCol1 + dx;
+      newCol1 = Math.max(minSide, newCol1);
+      // ensure middle column keeps at least minMiddle
+      const maxCol1 = middleWidth - startCol3 - minMiddle - 12;
+      newCol1 = Math.min(newCol1, maxCol1);
+      root.style.setProperty('--col1', newCol1 + 'px');
+    } else if (dragging.id === 'splitter2') {
+      let newCol3 = startCol3 - dx;
+      newCol3 = Math.max(minSide, newCol3);
+      const maxCol3 = middleWidth - startCol1 - minMiddle - 12;
+      newCol3 = Math.min(newCol3, maxCol3);
+      root.style.setProperty('--col3', newCol3 + 'px');
+    }
+    // re-render the node editor since canvas width changed
+    renderNodeEditor();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (dragging) {
+      dragging.classList.remove('dragging');
+      dragging = null;
+      document.body.classList.remove('resizing-cols');
+    }
+  });
+})();
+
+/* =================== MOBILE SUPPORT =================== */
+const MOBILE_BREAKPOINT = 900;
+function isMobile() { return window.innerWidth <= MOBILE_BREAKPOINT; }
+
+// Mobile tab bar — controls which panel is visible on small screens.
+// Only three tabs: Team / Battle / Flow. The log is permanently shown below.
+let mobileActiveTab = 'team';
+function activateMobileTab(tab) {
+  if (tab === 'log') return; // log isn't a switchable panel anymore
+  mobileActiveTab = tab;
+  document.querySelectorAll('#mobileTabbar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.middle > .panel').forEach(p => {
+    p.classList.toggle('mobile-active', p.dataset.mobilePanel === tab);
+  });
+}
+function setupMobileTabbar() {
+  document.querySelectorAll('#mobileTabbar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      if (tab === 'log') return;
+      activateMobileTab(tab);
+    });
+  });
+  if (isMobile()) activateMobileTab('team');
+}
+
+// Re-evaluate on viewport changes (orientation, window resize)
+window.addEventListener('resize', () => {
+  if (isMobile()) {
+    activateMobileTab(mobileActiveTab);
+  } else {
+    document.querySelectorAll('.middle > .panel').forEach(p => p.classList.remove('mobile-active'));
+  }
+  renderNodeEditor();
+});
+
+/* =================== TOUCH: TAP TOOLTIPS =================== */
+// Replace hover-based tooltips with tap-toggled bottom-sheet on touch devices.
+// We detect touch in attachHoverTooltip and adjust behavior.
+let activeTouchTooltip = null;
+function dismissTouchTooltip() {
+  if (activeTouchTooltip) { activeTouchTooltip.remove(); activeTouchTooltip = null; }
+}
+document.addEventListener('click', (e) => {
+  if (activeTouchTooltip && !e.target.closest('.mon-tooltip.mobile')) {
+    dismissTouchTooltip();
+  }
+});
+
+/* =================== PINCH ZOOM ON NODE CANVAS =================== */
+(function setupPinchZoom() {
+  const wrap = document.getElementById('nodeCanvasWrap');
+  const canvas = document.getElementById('nodeCanvas');
+  if (!wrap || !canvas) return;
+  let pinchStartDist = 0;
+  let pinchStartScale = 1;
+  let lastTouchTime = 0;
+
+  function dist(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      pinchStartDist = dist(e.touches[0], e.touches[1]);
+      pinchStartScale = canvasScale;
+    }
+    lastTouchTime = Date.now();
+  }, { passive: false });
+
+  wrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      e.preventDefault();
+      const d = dist(e.touches[0], e.touches[1]);
+      const factor = d / pinchStartDist;
+      canvasScale = Math.min(2, Math.max(0.4, pinchStartScale * factor));
+      canvas.style.transform = `scale(${canvasScale})`;
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) pinchStartDist = 0;
+  });
+})();
+
+/* =================== TOUCH SUPPORT FOR COLUMN SPLITTERS =================== */
+// Column splitters (between desktop columns) are mouse-only by design but tablets
+// >900px wide should still be able to drag them by touch. Synthesize mouse events
+// from touch on the column splitters only (the row splitter has its own native
+// touch handlers above).
+(function addTouchToSplitters() {
+  const fire = (target, type, touch) => {
+    const evt = new MouseEvent(type, {
+      bubbles: true, cancelable: true,
+      clientX: touch.clientX, clientY: touch.clientY,
+      button: 0
+    });
+    target.dispatchEvent(evt);
+  };
+  document.querySelectorAll('.splitter').forEach(sp => {
+    sp.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      fire(sp, 'mousedown', e.touches[0]);
+    }, { passive: false });
+  });
+  document.addEventListener('touchmove', (e) => {
+    if (document.body.classList.contains('resizing-cols')) {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        fire(document, 'mousemove', e.touches[0]);
+      }
+    }
+  }, { passive: false });
+  document.addEventListener('touchend', (e) => {
+    if (document.body.classList.contains('resizing-cols')) {
+      fire(document, 'mouseup', e.changedTouches[0] || { clientX:0, clientY:0 });
+    }
+  });
+})();
+
+/* =================== RENDER ALL =================== */
+function renderAll() {
+  renderTeams();
+  renderBattle();
+  renderNodeEditor();
+  renderLog();
+}
+
+/* =================== BOOT =================== */
+(async function init() {
+  await loadAssetLists();
+  createInitialNodeIfNone();
+  setupMobileTabbar();
+  // If the URL hash contains an encoded flowchart, decode it and overwrite the
+  // blank initial state. Does nothing for plain visits.
+  await maybeImportFromUrlHash();
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('20-brutalist.css');
+
+/* ============================================================
+   THEME: BRUTALIST-DARK
+   Same slab-and-shadow construction as Brutalist; the palette
+   is inverted so the offset shadow prints white on black.
+   ============================================================ */
+
+:root {
+  --bg: #0a0a0a;
+  --bg-panel: #141414;
+  --bg-panel-2: #1e1e1e;
+  --bg-elevated: #1a1a1a;
+  --ink: #f2f2ed;
+  --ink-soft: #d4d4cc;
+  --ink-mute: #8a8a82;
+  --accent: #ff5c3f;
+  --accent-2: #4d6bff;
+  --accent-3: #e0c400;
+  --line: #f2f2ed;
+  --line-soft: #f2f2ed;
+  --grid: rgba(255,255,255,0.06);
+  --good: #3fcf6b;
+  --bad: #ff4d4d;
+  --warn: #e0c400;
+  --shadow: 4px 4px 0 #f2f2ed;
+}
+
+/* Nash-finder halo needs a brighter rim to read on a dark panel. */
+.node.nash-glow { border-color: #f0c850 !important; }

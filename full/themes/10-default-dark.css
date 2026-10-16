@@ -1,0 +1,31 @@
+/* ============================================================
+   THEME: DEFAULT-DARK
+   The original dark palette, promoted from the old
+   [data-theme="dark"] toggle into a theme of its own.
+   ============================================================ */
+
+:root {
+  --bg: #1f2128;
+  --bg-panel: #272a33;
+  --bg-panel-2: #2d3039;
+  --bg-elevated: #343844;
+  --ink: #e6e3d6;
+  --ink-soft: #bcb9ac;
+  --ink-mute: #8a8778;
+  --accent: #e07a6a;
+  --accent-2: #7ca5b5;
+  --accent-3: #d4a373;
+  --line: #444853;
+  --line-soft: #3a3d47;
+  --grid: rgba(255,255,255,0.05);
+  --good: #88b888;
+  --bad: #d47878;
+  --warn: #d4a85d;
+  --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* Nash-finder halo needs a brighter rim to read on a dark panel. */
+.node.nash-glow { border-color: #f0c850 !important; }
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }

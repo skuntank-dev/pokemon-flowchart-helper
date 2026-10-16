@@ -1,0 +1,245 @@
+@import url('https://fonts.googleapis.com/css2?family=Schoolbell&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #1c2b22;
+  --bg-panel: #24352a;
+  --bg-panel-2: #2b3f30;
+  --bg-elevated: #314738;
+  --ink: #eef1e8;
+  --ink-soft: #cfd6c6;
+  --ink-mute: #8a9a86;
+  --accent: #f7e98e;
+  --accent-2: #8ecae6;
+  --accent-3: #f4a6c1;
+  --line: #eef1e8;
+  --line-soft: #4a5c4c;
+  --grid: rgba(238, 241, 232, 0.05);
+  --good: #a8d5a2;
+  --bad: #e79a9a;
+  --warn: #f7e98e;
+  --shadow: none;
+  --radius: 6px;
+  --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: 'Schoolbell', 'Kalam', cursive;
+  --sans: 'Schoolbell', 'Kalam', cursive;
+  --logH: 180px;
+  --mobileLogH: 180px;
+}
+
+/* ============================================================
+   THEME: CHALKBOARD — hand-drawn chalk on a worn blackboard.
+   Real board texture (dust + eraser ghosting), a wooden frame,
+   sketchy double-stroke "shaky hand" borders, and wavy chalk-
+   drawn underlines instead of straight ruled lines.
+   ============================================================ */
+
+/* the wooden frame around the whole board */
+body {
+  box-shadow:
+    inset 0 0 0 9px #6b4527,
+    inset 0 0 0 12px #4a2f1a,
+    inset 0 0 0 13px #2e1c0f;
+}
+
+/* worn slate surface: real procedural chalk-dust grain (SVG feTurbulence),
+   not a graph-paper grid — lighter, shinier where it's been erased most */
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 65% 55% at 50% 38%, rgba(255,255,255,0.05), transparent 70%),
+    radial-gradient(ellipse 900px 70px at 50% 100%, rgba(255,255,255,0.06), transparent 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-size: auto, auto, 200px 200px;
+}
+
+* { text-shadow: 0 0 1px rgba(255,255,255,0.3), 0 0 8px rgba(255,255,255,0.06); }
+
+/* the same chalk-dust grain, laid over every board surface */
+header.topbar::after, .panel::after, .log-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.node-canvas-wrap {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* `.node` is NOT in this list: the base stylesheet gives it `position: absolute`
+   so the flowchart's JS-computed coordinates (inline left/top) can place it on
+   `.node-canvas`. Forcing it to `position: relative` here (as an earlier draft
+   did) pulled every node out of absolute positioning and into normal document
+   flow, which is why nodes rendered stacked in the wrong place. `.node` is
+   already a positioned element (absolute, not static), so its `::before`
+   wobble-stroke below still anchors correctly without redeclaring position. */
+header.topbar, .panel, .log-panel, .pokemon-card {
+  position: relative;
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: none !important;
+}
+.node {
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: none !important;
+}
+header.topbar { border-radius: 8px 4px 10px 5px; }
+.panel { border-radius: 10px 4px 12px 5px; }
+.log-panel { border-radius: 6px 10px 4px 12px; }
+
+/* second, slightly rotated stroke just inside each shape = drawn twice by
+   an unsteady hand (kept inward so overflow:hidden never clips it away) */
+header.topbar::before, .panel::before, .log-panel::before, .pokemon-card::before, .node::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1.5px solid var(--line);
+  border-radius: inherit;
+  opacity: 0.4;
+  pointer-events: none;
+}
+header.topbar::before { transform: rotate(-0.5deg); }
+.panel::before { transform: rotate(0.45deg); }
+.log-panel::before { transform: rotate(-0.35deg); }
+.pokemon-card::before { transform: rotate(0.6deg); inset: 1.5px; }
+.node::before { transform: rotate(-0.6deg); inset: 1.5px; }
+.node.active::before { content: "→"; border: none; position: absolute; inset: auto; left: -18px; top: 50%; transform: translateY(-50%); opacity: 1; }
+
+/* the title itself is textured chalk: same grain, multiplied over the
+   letterforms instead of a flat vector fill */
+.brand {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 36px;
+  display: inline-block;
+  color: transparent;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(var(--ink), var(--ink));
+  background-size: 120px 120px, 100% 100%;
+  background-blend-mode: multiply;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.brand::before { content: "✎ "; color: var(--accent); -webkit-text-fill-color: var(--accent); }
+.brand::after { content: " ✎"; color: var(--accent-2); -webkit-text-fill-color: var(--accent-2); }
+
+.panel-header {
+  font-family: var(--serif);
+  font-size: 18px;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  border-bottom: none;
+  padding-bottom: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='8'%3E%3Cpath d='M0 4 Q6 0.5 12 4 T24 4' stroke='%23eef1e8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 24px 8px;
+}
+.panel-header .tag { background: transparent; border: 1px dashed var(--accent); color: var(--accent); }
+.panel-header > span:first-child {
+  color: transparent;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(var(--ink-soft), var(--ink-soft));
+  background-size: 120px 120px, 100% 100%;
+  background-blend-mode: multiply;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.theme-select, .team-controls button, .url-export-btn,
+.node-panel-controls button, .nash-btn, .battle-flip-btn,
+.import-bar button, .log-reset-btn, #importSide, #autoToggle {
+  background: transparent !important;
+  border-style: solid !important;
+  border-width: 2px !important;
+  font-family: var(--serif) !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  box-shadow: none !important;
+}
+/* Every other control here is a chalk-drawn outline (transparent, just a
+   border) — but the download button is the primary call-to-action and
+   every other theme fills it solid. Sharing the same `background:
+   transparent !important` left it with no fill at all over the noisy
+   board texture, reading as invisible. Give it its own solid slate fill. */
+.download-btn {
+  background: var(--bg-elevated) !important;
+  border-style: solid !important;
+  border-width: 2px !important;
+  font-family: var(--serif) !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  box-shadow: none !important;
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+.download-btn:hover, .team-controls button:hover, .import-bar button:hover,
+.nash-btn:hover, .battle-flip-btn:hover, .theme-select:hover {
+  background: rgba(255,255,255,0.06) !important;
+}
+.download-btn:hover { background: var(--bg-panel-2) !important; }
+
+.node {
+  border-radius: 10px 4px 10px 4px;
+  font-family: var(--serif);
+  font-size: 15px;
+}
+
+.turn0-pokemon-btn, .field input, .import-bar input[type=text] {
+  background: transparent;
+  border-style: dashed;
+}
+
+::-webkit-scrollbar-thumb { background: var(--line-soft); border-radius: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+
+/* Mobile. Theme rules outrank the base media queries, so every size bumped
+   above is walked back here — at 36px the chalk headline ran straight over
+   the import bar. The chalk sticks are decoration and go first. */
+@media (max-width: 900px) {
+  .brand { font-size: 19px; }
+  .panel-header { font-size: 14px; padding-bottom: 13px; }
+  .download-btn, .theme-select, .team-controls button, .url-export-btn,
+  .node-panel-controls button, .nash-btn, .battle-flip-btn,
+  .import-bar button, .log-reset-btn, #importSide, #autoToggle {
+    font-size: 13px !important;
+  }
+  /* Thinner frame so the board keeps its usable width on a phone. */
+  body { box-shadow: inset 0 0 0 5px #6b4527, inset 0 0 0 7px #4a2f1a, inset 0 0 0 8px #2e1c0f; }
+
+  /* Put the battle log back where the base stylesheet pins it.
+     The `position: relative` set further up (needed so the ::before wobble
+     and ::after grain anchor to each box) also lands on .log-panel, and a
+     plain rule in this sheet outranks the base's media-query rule — media
+     queries carry no specificity. That knocked the log out of its fixed
+     pinning and into normal flow, leaving the drag handle floating over
+     nothing. Restore the geometry; the pseudo-elements still anchor fine
+     because fixed is a positioned value too. */
+  .log-panel {
+    position: fixed;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    top: auto;
+    height: var(--mobileLogH);
+    max-height: none;
+    overflow: hidden;
+  }
+}
+@media (max-width: 480px) {
+  .brand { font-size: 16px; }
+  .panel-header { font-size: 13px; }
+}
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }

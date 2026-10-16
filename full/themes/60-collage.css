@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Architects+Daughter&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #ded0a8;
+  --bg-panel: #fdf8e8;
+  --bg-panel-2: #f5ecd0;
+  --bg-elevated: #fffef2;
+  --ink: #1a1a1a;
+  --ink-soft: #333333;
+  --ink-mute: #6b6b6b;
+  --accent: #ff5b9e;
+  --accent-2: #3fa7ff;
+  --accent-3: #ffd23f;
+  --line: #1a1a1a;
+  --line-soft: #999999;
+  --grid: rgba(0, 0, 0, 0.05);
+  --good: #3d9a5c;
+  --bad: #d1425a;
+  --warn: #c99a1f;
+  --shadow: 3px 5px 0 rgba(0,0,0,0.18), 6px 10px 14px rgba(0,0,0,0.15);
+  --radius: 2px;
+  --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: 'Permanent Marker', 'Kalam', cursive;
+  --sans: 'Architects Daughter', 'Kalam', cursive;
+  --logH: 180px;
+  --mobileLogH: 180px;
+}
+
+/* ============================================================
+   THEME: RANSOM NOTE COLLAGE — scattered scraps of taped
+   paper, sticky-note headers, marker scrawl, scissors-and-glue.
+   ============================================================ */
+
+body {
+  background-image:
+    radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+header.topbar { transform: rotate(-0.5deg); }
+.middle > .panel[data-mobile-panel="team"] { transform: rotate(0.6deg); }
+.middle > .panel[data-mobile-panel="battle"] { transform: rotate(-0.4deg); }
+.middle > .panel[data-mobile-panel="flow"] { transform: rotate(0.5deg); }
+.log-panel { transform: rotate(-0.3deg); }
+header.topbar::before { display: none; }
+
+/* washi tape strip across the top of every panel */
+header.topbar::after, .panel::after, .log-panel::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 90px;
+  height: 20px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(63, 167, 255, 0.55);
+  border: 1px solid rgba(0,0,0,0.15);
+  pointer-events: none;
+}
+.panel[data-mobile-panel="battle"]::after { background: rgba(255, 91, 158, 0.55); transform: translateX(-50%) rotate(2deg); }
+.panel[data-mobile-panel="flow"]::after { background: rgba(255, 210, 63, 0.6); transform: translateX(-50%) rotate(-1.5deg); }
+header.topbar, .panel, .log-panel { position: relative; overflow: visible; }
+.panel { overflow: hidden; }
+.panel-body, .panel-header { position: relative; }
+
+.brand {
+  font-family: var(--serif);
+  font-size: 28px;
+  transform: rotate(-1deg);
+  display: inline-block;
+}
+.brand::before { content: "✂ "; }
+.brand::after { content: " ✂"; }
+
+.panel-header {
+  font-family: var(--serif);
+  text-transform: none;
+  font-size: 15px;
+  background: var(--accent-3);
+  color: #1a1a1a;
+  border-bottom: 2px dashed var(--line);
+}
+.panel[data-mobile-panel="battle"] .panel-header { background: var(--accent); color: #fff; }
+.panel[data-mobile-panel="flow"] .panel-header { background: var(--accent-2); color: #fff; }
+.panel-header .tag { background: var(--ink); color: var(--bg-elevated); transform: rotate(-2deg); display: inline-block; }
+
+.download-btn, .theme-select, .team-controls button, .url-export-btn,
+.node-panel-controls button, .nash-btn, .battle-flip-btn,
+.import-bar button, .log-reset-btn, #importSide, #autoToggle {
+  font-family: var(--serif) !important;
+  text-transform: none !important;
+  border-radius: 3px 9px 3px 9px !important;
+}
+.team-controls button:nth-child(odd) { transform: rotate(-1deg); }
+.team-controls button:nth-child(even) { transform: rotate(1deg); }
+
+.node {
+  font-family: var(--sans);
+  border-radius: 3px 10px 3px 10px;
+  transform: rotate(-0.6deg);
+}
+.node:nth-child(even) { transform: rotate(0.6deg); }
+.node.active::before { content: "📌"; left: -18px; }
+
+.pokemon-card { transform: rotate(-0.3deg); }
+.pokemon-card:nth-child(even) { transform: rotate(0.3deg); }
+
+::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 2px; }
+::-webkit-scrollbar-track { background: var(--bg-panel-2); }
+
+/* Mobile. Theme rules outrank the base media queries, so the marker headline
+   is resized here; the tape strips also shrink so they stay on their scrap. */
+@media (max-width: 900px) {
+  .brand { font-size: 17px; }
+  header.topbar::after, .panel::after, .log-panel::after { width: 56px; height: 14px; top: -6px; }
+
+  /* Put the battle log back where the base stylesheet pins it. The
+     `position: relative; overflow: visible` set further up (so the tape
+     strip can hang off the top edge) also lands on .log-panel, and a plain
+     rule in this sheet outranks the base's media-query rule — media queries
+     carry no specificity. That knocked the log out of its fixed pinning into
+     normal flow and let its contents spill instead of scrolling, so the drag
+     handle ended up floating over nothing. */
+  .log-panel {
+    position: fixed;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    top: auto;
+    height: var(--mobileLogH);
+    max-height: none;
+    overflow: hidden;
+  }
+  /* Restoring overflow:hidden would clip a tape strip hung above the edge,
+     so tuck this one just inside the panel instead of losing it. */
+  .log-panel::after { top: 0; }
+}
+@media (max-width: 480px) {
+  .brand { font-size: 14px; }
+}
+
+/* No decorative glyphs flanking the wordmark. */
+.brand::before, .brand::after { content: none; }
